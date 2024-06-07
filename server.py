@@ -19,25 +19,25 @@ import nemo.collections.asr as nemo_asr
 
 # Load the model and configure decoding
 def load_model():
-    # ctc_decoding = CTCDecodingConfig()
-    # ctc_decoding.strategy = 'pyctcdecode'
-    # ctc_decoding.beam.kenlm_path = 'lm_filtered.arpa'
-    # ctc_decoding.beam.beam_size = 100
-    # ctc_decoding.beam.beam_alpha = 0.5
-    # ctc_decoding.beam.beam_beta = 1.5
+    ctc_decoding = CTCDecodingConfig()
+    ctc_decoding.strategy = 'pyctcdecode'
+    ctc_decoding.beam.kenlm_path = 'lm/final0.1.arpa'
+    ctc_decoding.beam.beam_size = 20
+    ctc_decoding.beam.beam_alpha = 0.09
+    ctc_decoding.beam.beam_beta = 1.05
 
-    # decoding_cls = OmegaConf.structured(CTCDecodingConfig)
-    # decoding_cls = OmegaConf.create(OmegaConf.to_container(decoding_cls))
-    # decoding_cfg = OmegaConf.merge(decoding_cls, ctc_decoding)
+    decoding_cls = OmegaConf.structured(CTCDecodingConfig)
+    decoding_cls = OmegaConf.create(OmegaConf.to_container(decoding_cls))
+    decoding_cfg = OmegaConf.merge(decoding_cls, ctc_decoding)
 
     path = "nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39/checkpoints/Conformer-CTC-Char--val_wer=0.2807-epoch=55-last.ckpt"
     asr_model = nemo_asr.models.EncDecCTCModel.load_from_checkpoint(path)
+    
+    with open_dict(asr_model.cfg):
+        asr_model.cfg.decoding = decoding_cfg
 
-    # with open_dict(asr_model.cfg):
-    #     asr_model.cfg.decoding = decoding_cfg
-
-    # asr_model.decoding = CTCDecoding(
-    #     decoding_cfg=asr_model.cfg.decoding, vocabulary=asr_model.decoding.vocabulary)
+    asr_model.decoding = CTCDecoding(
+        decoding_cfg=asr_model.cfg.decoding, vocabulary=asr_model.decoding.vocabulary)
 
     return asr_model
 

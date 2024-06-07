@@ -8,10 +8,10 @@ This repository contains an Arabic Automatic Speech Recognition (ASR) model and 
 - [Installation](#installation)
 - [Dataset](#dataset)
 - [Training the ASR Model](#training-the-asr-model)
+- [Language Modeling](#language-modeling)
 - [Running Inference](#running-inference)
 - [Running the Server](#running-the-server)
-- [Contributing](#contributing)
-- [License](#license)
+
 
 ## Arabic ASR Model
 Our ASR model is based on the Conformer architecture with a CTC (Connectionist Temporal Classification) loss. The model is trained using the NeMo framework, leveraging GPU acceleration for efficient training.
@@ -65,6 +65,9 @@ python training/asr/asr_ctc/speech_to_text_ctc.py \
 ```
 This command uses the Conformer CTC configuration and specifies the training and validation manifest files, as well as the GPU settings.
 
+## Language Modeling
+This section describes the process of building and utilizing language models (LM) for the 140online and MGB2 datasets using KenLM and SRILM. The language models are crucial for improving the accuracy of the ASR system. For more details check [language-modeling](lm/README.md)
+
 ## Running Inference
 To run inference and test the ASR model, edit `test.py` as needed and run:
 ```sh
@@ -76,6 +79,7 @@ python test.py \
   trainer.devices=1
 ```
 This command specifies the test manifest file and GPU settings for inference.
+
 
 ## Running the Server
 To start the server with the retrieval method, run:

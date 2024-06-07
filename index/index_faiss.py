@@ -42,7 +42,7 @@ class SimilarityFinder:
         else:
             self._build_faiss_index()
         print("Time for index construction: ", time.time() - t)
-
+    
     def _build_faiss_index(self):
         self.faiss_index.add(self.embeddings)
         faiss.write_index(self.faiss_index, self.index_file)
