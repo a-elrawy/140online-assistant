@@ -8,6 +8,7 @@ This repository contains an Arabic Automatic Speech Recognition (ASR) model and 
 - [Installation](#installation)
 - [Dataset](#dataset)
 - [Training the ASR Model](#training-the-asr-model)
+- [Pretrained Weights](#pretrained-weights)
 - [Language Modeling](#language-modeling)
 - [Running Inference](#running-inference)
 - [Running the Server](#running-the-server)
@@ -64,6 +65,27 @@ python training/asr/asr_ctc/speech_to_text_ctc.py \
   trainer.max_epochs=60
 ```
 This command uses the Conformer CTC configuration and specifies the training and validation manifest files, as well as the GPU settings.
+
+## Pretrained Weights
+To run the ASR and retrieval system effectively, you need to download pre-trained model weights. We provide a script to simplify this process.
+
+
+
+### Running the Script
+
+1. Ensure you have the required permissions to execute the script:
+    ```sh
+    chmod +x scripts/download_weights.sh
+    ```
+
+2. Run the script to download the weights:
+    ```sh
+    scripts/download_weights.sh
+    ```
+
+This script will download the pre-trained weights and place them in the appropriate directories required by the system.
+
+
 
 ## Language Modeling
 This section describes the process of building and utilizing language models (LM) for the 140online and MGB2 datasets using KenLM and SRILM. The language models are crucial for improving the accuracy of the ASR system. For more details check [language-modeling](lm/README.md)
