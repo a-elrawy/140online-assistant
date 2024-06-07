@@ -1,0 +1,284 @@
+commit hash: df5a39583e31fd99bda371759c7954f928195594
+diff --git a/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_bpe.py b/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_bpe.py
+index 2de150c..ee6b42a 100644
+--- a/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_bpe.py
++++ b/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_bpe.py
+@@ -76,7 +76,10 @@ def main(cfg):
+     trainer = pl.Trainer(**cfg.trainer)
+     exp_manager(trainer, cfg.get("exp_manager", None))
+     asr_model = EncDecHybridRNNTCTCBPEModel(cfg=cfg.model, trainer=trainer)
+-
++    asr_model.change_vocabulary(
++        new_tokenizer_dir=cfg.model.tokenizer.dir,
++        new_tokenizer_type=cfg.model.tokenizer.type
++    )
+     # Initialize the weights of the model from another model, if provided via config
+     asr_model.maybe_init_from_pretrained_checkpoint(cfg)
+ 
+diff --git a/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_char.py b/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_char.py
+index 532e2c9..0fb2397 100644
+--- a/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_char.py
++++ b/examples/asr/asr_hybrid_transducer_ctc/speech_to_text_hybrid_rnnt_ctc_char.py
+@@ -78,7 +78,7 @@ from nemo.utils import logging
+ from nemo.utils.exp_manager import exp_manager
+ 
+ 
+-@hydra_runner(config_path="../conf/conformer/hybrid_transducer_ctc/", config_name="conformer_hybrid_transducer_ctc")
++@hydra_runner(config_path="../conf/conformer/hybrid_transducer_ctc/", config_name="conformer_hybrid_transducer_ctc_char")
+ def main(cfg):
+     logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
+ 
+diff --git a/examples/asr/conf/config.yaml b/examples/asr/conf/config.yaml
+index 6ab764c..2cb24df 100644
+--- a/examples/asr/conf/config.yaml
++++ b/examples/asr/conf/config.yaml
+@@ -3,8 +3,7 @@ sample_rate: &sample_rate 16000
+ repeat: &repeat 1
+ dropout: &dropout 0.0
+ separable: &separable true
+-labels: &labels [" ", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+-         "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "'"]
++labels: &labels [" ", '|', '&', '}', 'b', 't', 'j', 'G', 'x', '*', 'z', '$', 'D', 'Z', 'g', '_', 'q', 'l', 'n', 'w', 'y', 'N', 'a', 'i', 'o', '`', 'P', 'J', "'", '>', '<', 'V', 'A', 'p', 'v', 'H', 'd', 'r', 's', 'S', 'T', 'E', 'f', 'k', 'm', 'h', 'Y', 'F', 'K', 'u', '~', '{']
+ 
+ model:
+   train_ds:
+@@ -13,7 +12,7 @@ model:
+     labels: *labels
+     batch_size: 32
+     trim_silence: True
+-    max_duration: 16.7
++    max_duration: 26.7
+     shuffle: True
+     num_workers: 8
+     pin_memory: true
+@@ -140,7 +139,7 @@ model:
+   decoder:
+     _target_: nemo.collections.asr.modules.ConvASRDecoder
+     feat_in: 1024
+-    num_classes: 28
++    num_classes: 52
+     vocabulary: *labels
+ 
+   optim:
+diff --git a/examples/asr/conf/conformer/conformer_ctc_char.yaml b/examples/asr/conf/conformer/conformer_ctc_char.yaml
+index 093efdc..6ffada8 100644
+--- a/examples/asr/conf/conformer/conformer_ctc_char.yaml
++++ b/examples/asr/conf/conformer/conformer_ctc_char.yaml
+@@ -6,8 +6,7 @@ name: "Conformer-CTC-Char"
+ 
+ model:
+   sample_rate: 16000
+-  labels:  [" ", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+-            "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "'"]
++  labels: [" ", '|', '&', '}', 'b', 't', 'j', 'G', 'x', '*', 'z', '$', 'D', 'Z', 'g', '_', 'q', 'l', 'n', 'w', 'y', 'N', 'a', 'i', 'o', '`', 'P', 'J', "'", '>', '<', 'V', 'A', 'p', 'v', 'H', 'd', 'r', 's', 'S', 'T', 'E', 'f', 'k', 'm', 'h', 'Y', 'F', 'K', 'u', '~', '{']
+   log_prediction: true # enables logging sample predictions in the output during training
+   ctc_reduction: 'mean_batch'
+   skip_nan_grad: false
+@@ -16,12 +15,12 @@ model:
+     manifest_filepath: ???
+     labels: ${model.labels}
+     sample_rate: ${model.sample_rate}
+-    batch_size: 16 # you may increase batch_size if your memory allows
++    batch_size: 8 # you may increase batch_size if your memory allows
+     shuffle: true
+     num_workers: 8
+     pin_memory: true
+     trim_silence: false
+-    max_duration: 16.7 # it is set for LibriSpeech, you may need to update it for your dataset
++    max_duration: 26.7 # it is set for LibriSpeech, you may need to update it for your dataset
+     min_duration: 0.1
+     # tarred datasets
+     is_tarred: false
+@@ -35,7 +34,7 @@ model:
+     manifest_filepath: ???
+     labels: ${model.labels}
+     sample_rate: ${model.sample_rate}
+-    batch_size: 16 # you may increase batch_size if your memory allows
++    batch_size: 8 # you may increase batch_size if your memory allows
+     shuffle: false
+     use_start_end_token: false
+     num_workers: 8
+@@ -45,7 +44,7 @@ model:
+     manifest_filepath: null
+     labels: ${model.labels}
+     sample_rate: ${model.sample_rate}
+-    batch_size: 16 # you may increase batch_size if your memory allows
++    batch_size: 8 # you may increase batch_size if your memory allows
+     shuffle: false
+     use_start_end_token: false
+     num_workers: 8
+@@ -160,7 +159,7 @@ trainer:
+   val_check_interval: 1.0 # Set to 0.25 to check 4 times per epoch, or an int for number of iterations
+   accelerator: auto
+   strategy: ddp
+-  accumulate_grad_batches: 1
++  accumulate_grad_batches: 8
+   gradient_clip_val: 0.0
+   precision: 32 # 16, 32, or bf16
+   log_every_n_steps: 10  # Interval of logging.
+@@ -176,18 +175,19 @@ trainer:
+ exp_manager:
+   exp_dir: null
+   name: ${name}
++  version: "2024-03-23_16-27-39" 
+   create_tensorboard_logger: true
+   create_checkpoint_callback: true
+   checkpoint_callback_params:
+     # in case of multiple validation sets, first one is used
+     monitor: "val_wer"
+     mode: "min"
+-    save_top_k: 5
++    save_top_k: 15
+     always_save_nemo: True # saves the checkpoints as nemo files instead of PTL checkpoints
+ 
+-  resume_from_checkpoint: null # The path to a checkpoint file to continue the training, restores the whole state including the epoch, step, LR schedulers, apex, etc.
++  # resume_from_checkpoint: null # The path to a checkpoint file to continue the training, restores the whole state including the epoch, step, LR schedulers, apex, etc.
+   # you need to set these two to True to continue the training
+-  resume_if_exists: false
++  resume_if_exists: true
+   resume_ignore_no_checkpoint: false
+ 
+   # You may use this section to create a W&B logger
+diff --git a/nemo/collections/asr/metrics/wer.py b/nemo/collections/asr/metrics/wer.py
+index 28a5a5d..026437e 100644
+--- a/nemo/collections/asr/metrics/wer.py
++++ b/nemo/collections/asr/metrics/wer.py
+@@ -23,6 +23,9 @@ from nemo.collections.asr.parts.submodules.ctc_decoding import AbstractCTCDecodi
+ from nemo.collections.asr.parts.submodules.rnnt_decoding import AbstractRNNTDecoding
+ from nemo.utils import logging
+ 
++from  buckwalter import fromBuckWalter
++import pyarabic.araby as araby
++
+ __all__ = ['word_error_rate', 'word_error_rate_detail', 'WER']
+ 
+ 
+@@ -205,6 +208,10 @@ def word_error_rate_per_utt(hypotheses: List[str], references: List[str], use_ce
+ 
+     return wer_per_utt, avg_wer
+ 
++def normalize_arabic(text):
++    text = araby.strip_tashkeel(text)
++    text = araby.normalize_hamza(text)
++    return text
+ 
+ class WER(Metric):
+     """
+@@ -261,7 +268,8 @@ class WER(Metric):
+         self.log_prediction = log_prediction
+         self.fold_consecutive = fold_consecutive
+         self.batch_dim_index = batch_dim_index
+-
++        self.references_all = []
++        self.hypo_all = []
+         self.decode = None
+         if isinstance(self.decoding, AbstractRNNTDecoding):
+             self.decode = lambda predictions, predictions_lengths: self.decoding.rnnt_decoder_predictions_tensor(
+@@ -319,6 +327,13 @@ class WER(Metric):
+             logging.info(f"reference:{references[0]}")
+             logging.info(f"predicted:{hypotheses[0]}")
+ 
++        references = [normalize_arabic(fromBuckWalter(x)) for x in references]
++        hypotheses = [normalize_arabic(fromBuckWalter(x)) for x in hypotheses]
++
++        self.references_all = self.references_all + references
++        self.hypo_all = self.hypo_all + hypotheses
++
++        
+         for h, r in zip(hypotheses, references):
+             if self.use_cer:
+                 h_list = list(h)
+@@ -329,9 +344,16 @@ class WER(Metric):
+             words += len(r_list)
+             # Compute Levenstein's distance
+             scores += editdistance.eval(h_list, r_list)
+-
++        
+         self.scores = torch.tensor(scores, device=self.scores.device, dtype=self.scores.dtype)
+         self.words = torch.tensor(words, device=self.words.device, dtype=self.words.dtype)
++    
++    def write(self, path):
++        with open(path, 'w') as combined_file:
++            for ref, hyp in zip(self.references_all,  self.hypo_all):
++                combined_file.write(f"Reference: {ref}\n")
++                combined_file.write(f"Hypothesis: {hyp}\n")
++                combined_file.write("\n")
+ 
+     def compute(self):
+         scores = self.scores.detach().float()
+diff --git a/nemo/collections/asr/models/ctc_models.py b/nemo/collections/asr/models/ctc_models.py
+index a663590..2712c3d 100644
+--- a/nemo/collections/asr/models/ctc_models.py
++++ b/nemo/collections/asr/models/ctc_models.py
+@@ -473,7 +473,6 @@ class EncDecCTCModel(ASRModel, ExportableEncDecModel, ASRModuleMixin, InterCTCMi
+                 f"{self} Arguments ``input_signal`` and ``input_signal_length`` are mutually exclusive "
+                 " with ``processed_signal`` and ``processed_signal_len`` arguments."
+             )
+-
+         if not has_processed_signal:
+             processed_signal, processed_signal_length = self.preprocessor(
+                 input_signal=input_signal, length=input_signal_length,
+diff --git a/nemo/collections/asr/parts/mixins/transcription.py b/nemo/collections/asr/parts/mixins/transcription.py
+index 164ee4e..f498cbe 100644
+--- a/nemo/collections/asr/parts/mixins/transcription.py
++++ b/nemo/collections/asr/parts/mixins/transcription.py
+@@ -349,7 +349,7 @@ class TranscriptionMixin(ABC):
+                 )
+ 
+         transcribe_cfg = override_config
+-
++        results = []
+         try:
+             # Initialize and assert the transcription environment
+             self._transcribe_on_begin(audio, transcribe_cfg)
+@@ -374,6 +374,10 @@ class TranscriptionMixin(ABC):
+                     processed_outputs = self._transcribe_output_processing(model_outputs, transcribe_cfg)
+ 
+                     # clear up memory
++                    results.append({''})
++                    for t, o in zip(test_batch,model_outputs) :
++                        results.append({t:o})
++
+                     del test_batch, model_outputs
+ 
+                     # Yield results if generator
+@@ -383,6 +387,7 @@ class TranscriptionMixin(ABC):
+ 
+         finally:
+             # set mode back to its original value
++            print(result)
+             self._transcribe_on_end(transcribe_cfg)
+ 
+     """
+diff --git a/nemo/collections/asr/parts/submodules/ctc_beam_decoding.py b/nemo/collections/asr/parts/submodules/ctc_beam_decoding.py
+index 5ed504f..4313bfd 100644
+--- a/nemo/collections/asr/parts/submodules/ctc_beam_decoding.py
++++ b/nemo/collections/asr/parts/submodules/ctc_beam_decoding.py
+@@ -115,6 +115,7 @@ class AbstractBeamCTCInfer(Typing):
+             vocab: List of str. Each token corresponds to its location in the vocabulary emitted by the model.
+                 Note that this vocabulary must NOT contain the "BLANK" token.
+         """
++        # vocab = vocab + [""]
+         self.vocab = vocab
+         self.vocab_index_map = {v: i for i, v in enumerate(vocab)}
+         self.index_vocab_map = {i: v for i, v in enumerate(vocab)}
+@@ -414,6 +415,7 @@ class BeamCTCInfer(AbstractBeamCTCInfer):
+             self.pyctcdecode_beam_scorer = pyctcdecode.build_ctcdecoder(
+                 labels=self.vocab, kenlm_model_path=self.kenlm_path, alpha=self.beam_alpha, beta=self.beam_beta
+             )  # type: pyctcdecode.BeamSearchDecoderCTC
++            print(self.pyctcdecode_beam_scorer._alphabet._labels)
+ 
+         x = x.to('cpu').numpy()
+ 
+diff --git a/nemo/collections/asr/parts/submodules/ctc_greedy_decoding.py b/nemo/collections/asr/parts/submodules/ctc_greedy_decoding.py
+index 686ef79..8394f06 100644
+--- a/nemo/collections/asr/parts/submodules/ctc_greedy_decoding.py
++++ b/nemo/collections/asr/parts/submodules/ctc_greedy_decoding.py
+@@ -203,6 +203,7 @@ class GreedyCTCInfer(Typing, ConfidenceMethodMixin):
+         hypothesis.y_sequence = prediction_labels.numpy().tolist()
+         hypothesis.score = (prediction_logprobs[non_blank_ids]).sum()
+ 
++
+         if self.preserve_alignments:
+             # Preserve the logprobs, as well as labels after argmax
+             hypothesis.alignments = (prediction.clone(), prediction_labels.clone())

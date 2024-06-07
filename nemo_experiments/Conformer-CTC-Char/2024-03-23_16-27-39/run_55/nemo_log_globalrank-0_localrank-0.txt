@@ -1,0 +1,391 @@
+[NeMo W 2024-05-30 15:03:56 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+    See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+      ret = run_job(
+    
+[NeMo I 2024-05-30 15:03:56 inference:89] Hydra config: name: Conformer-CTC-Char
+    model:
+      sample_rate: 16000
+      labels:
+      - ' '
+      - '|'
+      - '&'
+      - '}'
+      - b
+      - t
+      - j
+      - G
+      - x
+      - '*'
+      - z
+      - $
+      - D
+      - Z
+      - g
+      - _
+      - q
+      - l
+      - 'n'
+      - w
+      - 'y'
+      - 'N'
+      - a
+      - i
+      - o
+      - '`'
+      - P
+      - J
+      - ''''
+      - '>'
+      - <
+      - V
+      - A
+      - p
+      - v
+      - H
+      - d
+      - r
+      - s
+      - S
+      - T
+      - E
+      - f
+      - k
+      - m
+      - h
+      - 'Y'
+      - F
+      - K
+      - u
+      - '~'
+      - '{'
+      log_prediction: true
+      ctc_reduction: mean_batch
+      skip_nan_grad: false
+      train_ds:
+        manifest_filepath: train_mer80_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: true
+        num_workers: 8
+        pin_memory: true
+        trim_silence: false
+        max_duration: 26.7
+        min_duration: 0.1
+        is_tarred: false
+        tarred_audio_filepaths: null
+        shuffle_n: 2048
+        bucketing_strategy: synced_randomized
+        bucketing_batch_size: null
+      validation_ds:
+        manifest_filepath: dev_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: false
+        use_start_end_token: false
+        num_workers: 8
+        pin_memory: true
+      test_ds:
+        manifest_filepath: 140_test_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: false
+        use_start_end_token: false
+        num_workers: 8
+        pin_memory: true
+      preprocessor:
+        _target_: nemo.collections.asr.modules.AudioToMelSpectrogramPreprocessor
+        sample_rate: ${model.sample_rate}
+        normalize: per_feature
+        window_size: 0.025
+        window_stride: 0.01
+        window: hann
+        features: 80
+        n_fft: 512
+        log: true
+        frame_splicing: 1
+        dither: 1.0e-05
+        pad_to: 0
+        pad_value: 0.0
+      spec_augment:
+        _target_: nemo.collections.asr.modules.SpectrogramAugmentation
+        freq_masks: 2
+        time_masks: 10
+        freq_width: 27
+        time_width: 0.05
+      encoder:
+        _target_: nemo.collections.asr.modules.ConformerEncoder
+        feat_in: ${model.preprocessor.features}
+        feat_out: -1
+        n_layers: 16
+        d_model: 256
+        subsampling: striding
+        subsampling_factor: 4
+        subsampling_conv_channels: -1
+        causal_downsampling: false
+        ff_expansion_factor: 4
+        self_attention_model: rel_pos
+        n_heads: 8
+        att_context_size:
+        - -1
+        - -1
+        att_context_style: regular
+        xscaling: true
+        untie_biases: true
+        pos_emb_max_len: 5000
+        conv_kernel_size: 31
+        conv_norm_type: batch_norm
+        conv_context_size: null
+        dropout: 0.1
+        dropout_pre_encoder: 0.1
+        dropout_emb: 0.0
+        dropout_att: 0.1
+        stochastic_depth_drop_prob: 0.0
+        stochastic_depth_mode: linear
+        stochastic_depth_start_layer: 1
+      decoder:
+        _target_: nemo.collections.asr.modules.ConvASRDecoder
+        feat_in: null
+        num_classes: -1
+        vocabulary: ${model.labels}
+      interctc:
+        loss_weights: []
+        apply_at_layers: []
+      optim:
+        name: adamw
+        lr: 2.0
+        betas:
+        - 0.9
+        - 0.98
+        weight_decay: 0.001
+        sched:
+          name: NoamAnnealing
+          d_model: ${model.encoder.d_model}
+          warmup_steps: 10000
+          warmup_ratio: null
+          min_lr: 1.0e-06
+    trainer:
+      devices: 1
+      num_nodes: 1
+      max_epochs: 1000
+      max_steps: -1
+      val_check_interval: 1.0
+      accelerator: gpu
+      strategy: ddp
+      accumulate_grad_batches: 8
+      gradient_clip_val: 0.0
+      precision: 32
+      log_every_n_steps: 10
+      enable_progress_bar: true
+      num_sanity_val_steps: 0
+      check_val_every_n_epoch: 1
+      sync_batchnorm: true
+      enable_checkpointing: false
+      logger: false
+      benchmark: false
+    exp_manager:
+      exp_dir: null
+      name: ${name}
+      version: 2024-03-23_16-27-39
+      create_tensorboard_logger: true
+      create_checkpoint_callback: true
+      checkpoint_callback_params:
+        monitor: val_wer
+        mode: min
+        save_top_k: 15
+        always_save_nemo: true
+      resume_if_exists: true
+      resume_ignore_no_checkpoint: false
+      create_wandb_logger: false
+      wandb_logger_kwargs:
+        name: null
+        project: null
+    
+[NeMo W 2024-05-30 15:03:59 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/lightning_fabric/plugins/environments/slurm.py:168: PossibleUserWarning: The `srun` command is available on your system but is not used. HINT: If your intention is to run Lightning on SLURM, prepend your python command with `srun` like so: srun python inference.py --config-path=examples/asr/conf/conform ...
+      rank_zero_warn(
+    
+[NeMo I 2024-05-30 15:03:59 exp_manager:658] Resuming training from checkpoint: /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39/checkpoints/Conformer-CTC-Char--val_wer=0.2807-epoch=55-last.ckpt
+[NeMo I 2024-05-30 15:03:59 exp_manager:396] Experiments will be logged at /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39
+[NeMo I 2024-05-30 15:03:59 exp_manager:856] TensorboardLogger has been set up
+[NeMo I 2024-05-30 15:04:16 collections:196] Dataset loaded with 353808 files totalling 883.41 hours
+[NeMo I 2024-05-30 15:04:16 collections:197] 21295 files were filtered totalling 243.63 hours
+[NeMo W 2024-05-30 15:04:16 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo I 2024-05-30 15:04:16 collections:196] Dataset loaded with 5842 files totalling 9.94 hours
+[NeMo I 2024-05-30 15:04:16 collections:197] 0 files were filtered totalling 0.00 hours
+[NeMo I 2024-05-30 15:04:16 collections:196] Dataset loaded with 300 files totalling 0.40 hours
+[NeMo I 2024-05-30 15:04:16 collections:197] 0 files were filtered totalling 0.00 hours
+[NeMo I 2024-05-30 15:04:16 features:289] PADDING: 0
+[NeMo I 2024-05-30 15:04:17 ctc_models:70] 
+    Replacing placeholder number of classes (-1) with actual number of classes - 52
+[NeMo I 2024-05-30 15:04:17 conv_asr:428] num_classes of ConvASRDecoder is set to the size of the vocabulary: 52.
+[NeMo I 2024-05-30 15:04:17 ctc_beam_decoding:225] Beam search algorithm: pyctcdecode
+[NeMo W 2024-05-30 15:04:22 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo I 2024-05-30 15:04:57 ctc_decoding:309] Beam search requires that consecutive ctc tokens are not folded. 
+    Overriding provided value of `fold_consecutive` = True to False
+[NeMo I 2024-05-30 15:05:28 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:28 wer:327] reference:$rkp mHmd jlAl Alsyd mnSwr
+[NeMo I 2024-05-30 15:05:28 wer:328] predicted:$rkp mHmd jlAl Alsyd mnSwr
+[NeMo I 2024-05-30 15:05:29 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:29 wer:327] reference:>xbrny En AltDAmn llHdAyd w AlbwyAt
+[NeMo I 2024-05-30 15:05:29 wer:328] predicted:>xbrny En AltDAmn llHdA}d wAlbwyAt
+[NeMo I 2024-05-30 15:05:29 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:29 wer:327] reference:syf Aldyn Ebd Allh AlkAtb w$krFA mqdmA
+[NeMo I 2024-05-30 15:05:29 wer:328] predicted:lyf Aldyny Ebd Allh AlkAtb w$krA mqdmA
+[NeMo I 2024-05-30 15:05:29 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:29 wer:327] reference:>wSlny b$rkp mdrsh Ebd AlEzyz Almn$AwY
+[NeMo I 2024-05-30 15:05:29 wer:328] predicted:>wSlny b$rkp mdrsp Ebd AlEzyz Almn$Awy
+[NeMo I 2024-05-30 15:05:30 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:30 wer:327] reference:hl ymknk tzwydy btfASyl Hwl $rkp jym hAnY drwy$
+[NeMo I 2024-05-30 15:05:30 wer:328] predicted:hl ymknk tzwydy btfASyl Hwl $rkp jym mhyny drwy$
+[NeMo I 2024-05-30 15:05:30 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:30 wer:327] reference:mSwgAt w mjwhrAt mntSr jwrj AsHAq w$krFA lk
+[NeMo I 2024-05-30 15:05:30 wer:328] predicted:mSwgAt wmjwhrAt mntSr jwrj <sHAq w$krA lk
+[NeMo I 2024-05-30 15:05:30 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:30 wer:327] reference:>ryd mElwmAt En Al$rkp Almsjlp bAsm AHmd ErfAn
+[NeMo I 2024-05-30 15:05:30 wer:328] predicted:>ryd mElwmAt En Al$rkp Almsjlp bAsm >Hmd ErfAn
+[NeMo I 2024-05-30 15:05:30 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:30 wer:327] reference:r>ft >bw AlEynyn w  $rkAh >kwn lk $AkrFA
+[NeMo I 2024-05-30 15:05:30 wer:328] predicted:r>ft >bw AlEnyn w$rkAh >kwn $AkrA lk
+[NeMo I 2024-05-30 15:05:31 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:31 wer:327] reference:>wd AlHSwl ElY byAnAt En Sydlyh r$A mHmd >Hmd
+[NeMo I 2024-05-30 15:05:31 wer:328] predicted:>wd AlHSwl ElY byAnAt En Sydlyp rw$A mHmd >Hmd
+[NeMo I 2024-05-30 15:05:31 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:31 wer:327] reference:>wSlny b$rkp mSbgh sAn jwrj
+[NeMo I 2024-05-30 15:05:31 wer:328] predicted:>wSlny b$rkp mSbgp sAn jwrj
+[NeMo I 2024-05-30 15:05:31 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:31 wer:327] reference:byAnAt En dAr AllHwm  mHmd mHmd AlHdydY
+[NeMo I 2024-05-30 15:05:31 wer:328] predicted:byAnAt En dAr AllHwm mHmd mHmd AlHdydy
+[NeMo I 2024-05-30 15:05:32 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:32 wer:327] reference:mHmd HsnY mHmd AlymAnY w$krA
+[NeMo I 2024-05-30 15:05:32 wer:328] predicted:mHmd Hsny mHmd AlymAny w$krA
+[NeMo I 2024-05-30 15:05:32 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:32 wer:327] reference:mA*A ldyk mn mElwmAt En Alm&ssp AlmSryp ltjArp AlAdwAt AlkhrbA}yp
+[NeMo I 2024-05-30 15:05:32 wer:328] predicted:mA*A ldyk mn mElwmAt En Alm&ssp AlmSryp ltjArp Al>dwAt AlkhrbA}yp
+[NeMo I 2024-05-30 15:05:32 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:32 wer:327] reference:>wd AlHSwl ElY byAnAt $rkp EAdl mSTfY $Akr
+[NeMo I 2024-05-30 15:05:32 wer:328] predicted:>wd AlHSwl ElY byAnAt $rkp EAd AlmSTfY $Akr
+[NeMo I 2024-05-30 15:05:32 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:32 wer:327] reference:mA*A tErf En bqAlh mSTfY kmAl Alsyd
+[NeMo I 2024-05-30 15:05:32 wer:328] predicted:mA*A tErf En bqAlp mSTfY kmAl Alsyd
+[NeMo I 2024-05-30 15:05:33 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:33 wer:327] reference:>rgb fy mErfp Almzyd En krysmAr trAfyl
+[NeMo I 2024-05-30 15:05:33 wer:328] predicted:>rgb fy mErfp Almzyd En krysmAr trAfyl
+[NeMo I 2024-05-30 15:05:33 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:33 wer:327] reference:>wd AlHSwl ElY byAnAt En syftY jArdyAnz
+[NeMo I 2024-05-30 15:05:33 wer:328] predicted:>wd AlHSwl ElY byAnAt En sfty gArdn
+[NeMo I 2024-05-30 15:05:33 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:33 wer:327] reference:>wd Al<stElAm En mktbh $rwq
+[NeMo I 2024-05-30 15:05:33 wer:328] predicted:>wd AlAstElAm En mktbp $rwq
+[NeMo I 2024-05-30 15:05:33 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:33 wer:327] reference:mElwmAt AlEds llEqAdp AlHdyvp
+[NeMo I 2024-05-30 15:05:33 wer:328] predicted:mElwmAt AlEks llEqAdp AlHdyvp
+[NeMo I 2024-05-30 15:05:34 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:34 wer:327] reference:mElwmAt AlmtwlY llAvAv swf >kwn mmtnA
+[NeMo I 2024-05-30 15:05:34 wer:328] predicted:mElwmAt Almtwly ll>vAv swf >kwn mmtnA
+[NeMo I 2024-05-30 15:05:34 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:34 wer:327] reference:mElwmAt Tywr xAld mHmd ElY Alsyd w$krFA mqdmA
+[NeMo I 2024-05-30 15:05:34 wer:328] predicted:mElwmAt tywr xAld mHmd Ely Alsyd w$krA mqdmA
+[NeMo I 2024-05-30 15:05:34 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:34 wer:327] reference:hl ldyk byAnAt Hwl AlbnA' AlHdyv llmqAwlAt wAlAstvmAr AlEqArY
+[NeMo I 2024-05-30 15:05:34 wer:328] predicted:hl ldyk byAnAt Hwl AlbnA' AlHdyv llmqAwlAt wAlAstvmAr AlEqAry
+[NeMo I 2024-05-30 15:05:34 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:34 wer:327] reference:>ryd mElwmAt En AlmSryp lltjArh w AltwrydAt w AltwkylAt AltjAryh
+[NeMo I 2024-05-30 15:05:34 wer:328] predicted:>ryd mElwmAt En AlmSryp lltjArp wAltwrydAt wAltwkylAt AltjAryp
+[NeMo I 2024-05-30 15:05:35 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:35 wer:327] reference:byAnAt En mjwhrAt jmAl mHmd mHmd mHmd
+[NeMo I 2024-05-30 15:05:35 wer:328] predicted:byAnAt En mjwhrAt jmAl mHmd mHmd mHmd
+[NeMo I 2024-05-30 15:05:35 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:35 wer:327] reference:mA*A tErf En nyw tk llAstvmAr AlEqArY w AlsyAHY
+[NeMo I 2024-05-30 15:05:35 wer:328] predicted:mA*A tErf En ywtk llAstvmAr AlEqAry wAlsyAHy
+[NeMo I 2024-05-30 15:05:35 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:35 wer:327] reference:hl ymknk tzwydy btfASyl Hwl $rkp mdrsh >bw nbhAn AlAbtdA}yh
+[NeMo I 2024-05-30 15:05:35 wer:328] predicted:hl ymknk tzwydy btfASyl Hwl $rkp mdrsp >bw nbhAn AlAbtdA}yp
+[NeMo I 2024-05-30 15:05:35 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:35 wer:327] reference:byAnAt En Abw myAs lmstlzmAt Altjmyl
+[NeMo I 2024-05-30 15:05:35 wer:328] predicted:byAnAt En >bw myAs lmstlzmAt Altjmyl
+[NeMo I 2024-05-30 15:05:36 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:36 wer:327] reference:>xbrny En AlSAdq lSyAnp AlsyArAt w$krFA mqdmA
+[NeMo I 2024-05-30 15:05:36 wer:328] predicted:>xbrny En AlSAdq lSyAnp AlsyArAt w$krA mqdmA
+[NeMo I 2024-05-30 15:05:36 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:36 wer:327] reference:mA*A ldyk En bwrn  lyrn AkAdymY
+[NeMo I 2024-05-30 15:05:36 wer:328] predicted:mA*A ldyk En bwn twl >kAdymy
+[NeMo I 2024-05-30 15:05:36 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:36 wer:327] reference:>wSlny b$rkp Sydlyh xAld >Hmd syd >Hmd
+[NeMo I 2024-05-30 15:05:36 wer:328] predicted:>wSlny b$rkp Sydlyp xAld >Hmd syd >Hmd
+[NeMo I 2024-05-30 15:05:36 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:36 wer:327] reference:mA*A ldyk mn mElwmAt En AjrwmAtyk
+[NeMo I 2024-05-30 15:05:36 wer:328] predicted:mA*A ldyk mn mElwmAt En AjrwmAtk
+[NeMo I 2024-05-30 15:05:37 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:37 wer:327] reference:>wd AlHSwl ElY byAnAt En kAyrw bAk
+[NeMo I 2024-05-30 15:05:37 wer:328] predicted:>wd AlHSwl ElY byAnAt En kyrw bAk
+[NeMo I 2024-05-30 15:05:37 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:37 wer:327] reference:hl ldyk byAnAt Hwl lArws
+[NeMo I 2024-05-30 15:05:37 wer:328] predicted:hl ldyk byAnAt Hwl Alrws
+[NeMo I 2024-05-30 15:05:37 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:37 wer:327] reference:>ryd mElwmAt En ElY mHmwd Abw byh
+[NeMo I 2024-05-30 15:05:37 wer:328] predicted:>ryd mElwmAt En Ely mHmwd >bw byh
+[NeMo I 2024-05-30 15:05:37 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:37 wer:327] reference:>ryd mElwmAt En Al$rkp Almsjlp bAsm bqAlh AlHAj Ebd AlslAm sAlm w Axyh AlHAj mHmd sAlm
+[NeMo I 2024-05-30 15:05:37 wer:328] predicted:>ryd mElwmAt En Al$rkp Almsjlp bAsm bqAlp AlHAj Ebd AlslAm sAlm w>xyh AlHAj mHmd sAlm
+[NeMo I 2024-05-30 15:05:37 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:37 wer:327] reference:mA*A ldyk En SyAnp jnrAl Alyktryk
+[NeMo I 2024-05-30 15:05:37 wer:328] predicted:mA*A ldyk En SyAnp jnrAl Alktryk
+[NeMo I 2024-05-30 15:05:38 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:38 wer:327] reference:byAnAt En skwr llsfr w AlsyAHh lw smHt
+[NeMo I 2024-05-30 15:05:38 wer:328] predicted:byAnAt En skwr llsfr wAlsyAHp lw smHt
+[NeMo I 2024-05-30 15:05:38 wer:326] 
+    
+[NeMo I 2024-05-30 15:05:38 wer:327] reference:byAnAt En fyfA llSnAEAt Alg*A}yh
+[NeMo I 2024-05-30 15:05:38 wer:328] predicted:byAnAt Enfyfp llSnAEAt Alg*A}yp
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('global_step', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_wer', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    

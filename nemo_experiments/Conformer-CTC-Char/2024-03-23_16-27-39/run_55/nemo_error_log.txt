@@ -1,0 +1,22 @@
+[NeMo W 2024-05-30 15:03:56 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+    See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+      ret = run_job(
+    
+[NeMo W 2024-05-30 15:03:59 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/lightning_fabric/plugins/environments/slurm.py:168: PossibleUserWarning: The `srun` command is available on your system but is not used. HINT: If your intention is to run Lightning on SLURM, prepend your python command with `srun` like so: srun python inference.py --config-path=examples/asr/conf/conform ...
+      rank_zero_warn(
+    
+[NeMo W 2024-05-30 15:04:16 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo W 2024-05-30 15:04:22 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('global_step', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-05-30 15:05:38 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_wer', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    

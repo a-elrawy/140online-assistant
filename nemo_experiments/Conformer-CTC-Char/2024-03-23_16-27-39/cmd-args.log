@@ -1,0 +1,1 @@
+test.py --config-path=examples/asr/conf/conformer/ --config-name=conformer_ctc_char model.train_ds.manifest_filepath=manifest/train_mer80_manifest.json model.validation_ds.manifest_filepath=manifest/dev_manifest.json model.test_ds.manifest_filepath=manifest/test_manifest.json trainer.accelerator=gpu trainer.devices=1

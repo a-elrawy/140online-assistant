@@ -1,0 +1,2923 @@
+[NeMo W 2024-06-03 04:58:09 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+    See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+      ret = run_job(
+    
+[NeMo I 2024-06-03 04:58:09 inference:89] Hydra config: name: Conformer-CTC-Char
+    model:
+      sample_rate: 16000
+      labels:
+      - ' '
+      - '|'
+      - '&'
+      - '}'
+      - b
+      - t
+      - j
+      - G
+      - x
+      - '*'
+      - z
+      - $
+      - D
+      - Z
+      - g
+      - _
+      - q
+      - l
+      - 'n'
+      - w
+      - 'y'
+      - 'N'
+      - a
+      - i
+      - o
+      - '`'
+      - P
+      - J
+      - ''''
+      - '>'
+      - <
+      - V
+      - A
+      - p
+      - v
+      - H
+      - d
+      - r
+      - s
+      - S
+      - T
+      - E
+      - f
+      - k
+      - m
+      - h
+      - 'Y'
+      - F
+      - K
+      - u
+      - '~'
+      - '{'
+      log_prediction: true
+      ctc_reduction: mean_batch
+      skip_nan_grad: false
+      train_ds:
+        manifest_filepath: train_mer80_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: true
+        num_workers: 8
+        pin_memory: true
+        trim_silence: false
+        max_duration: 26.7
+        min_duration: 0.1
+        is_tarred: false
+        tarred_audio_filepaths: null
+        shuffle_n: 2048
+        bucketing_strategy: synced_randomized
+        bucketing_batch_size: null
+      validation_ds:
+        manifest_filepath: dev_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: false
+        use_start_end_token: false
+        num_workers: 8
+        pin_memory: true
+      test_ds:
+        manifest_filepath: converted_manifest.json
+        labels: ${model.labels}
+        sample_rate: ${model.sample_rate}
+        batch_size: 8
+        shuffle: false
+        use_start_end_token: false
+        num_workers: 8
+        pin_memory: true
+      preprocessor:
+        _target_: nemo.collections.asr.modules.AudioToMelSpectrogramPreprocessor
+        sample_rate: ${model.sample_rate}
+        normalize: per_feature
+        window_size: 0.025
+        window_stride: 0.01
+        window: hann
+        features: 80
+        n_fft: 512
+        log: true
+        frame_splicing: 1
+        dither: 1.0e-05
+        pad_to: 0
+        pad_value: 0.0
+      spec_augment:
+        _target_: nemo.collections.asr.modules.SpectrogramAugmentation
+        freq_masks: 2
+        time_masks: 10
+        freq_width: 27
+        time_width: 0.05
+      encoder:
+        _target_: nemo.collections.asr.modules.ConformerEncoder
+        feat_in: ${model.preprocessor.features}
+        feat_out: -1
+        n_layers: 16
+        d_model: 256
+        subsampling: striding
+        subsampling_factor: 4
+        subsampling_conv_channels: -1
+        causal_downsampling: false
+        ff_expansion_factor: 4
+        self_attention_model: rel_pos
+        n_heads: 8
+        att_context_size:
+        - -1
+        - -1
+        att_context_style: regular
+        xscaling: true
+        untie_biases: true
+        pos_emb_max_len: 5000
+        conv_kernel_size: 31
+        conv_norm_type: batch_norm
+        conv_context_size: null
+        dropout: 0.1
+        dropout_pre_encoder: 0.1
+        dropout_emb: 0.0
+        dropout_att: 0.1
+        stochastic_depth_drop_prob: 0.0
+        stochastic_depth_mode: linear
+        stochastic_depth_start_layer: 1
+      decoder:
+        _target_: nemo.collections.asr.modules.ConvASRDecoder
+        feat_in: null
+        num_classes: -1
+        vocabulary: ${model.labels}
+      interctc:
+        loss_weights: []
+        apply_at_layers: []
+      optim:
+        name: adamw
+        lr: 2.0
+        betas:
+        - 0.9
+        - 0.98
+        weight_decay: 0.001
+        sched:
+          name: NoamAnnealing
+          d_model: ${model.encoder.d_model}
+          warmup_steps: 10000
+          warmup_ratio: null
+          min_lr: 1.0e-06
+    trainer:
+      devices: 1
+      num_nodes: 1
+      max_epochs: 1000
+      max_steps: -1
+      val_check_interval: 1.0
+      accelerator: gpu
+      strategy: ddp
+      accumulate_grad_batches: 8
+      gradient_clip_val: 0.0
+      precision: 32
+      log_every_n_steps: 10
+      enable_progress_bar: true
+      num_sanity_val_steps: 0
+      check_val_every_n_epoch: 1
+      sync_batchnorm: true
+      enable_checkpointing: false
+      logger: false
+      benchmark: false
+    exp_manager:
+      exp_dir: null
+      name: ${name}
+      version: 2024-03-23_16-27-39
+      create_tensorboard_logger: true
+      create_checkpoint_callback: true
+      checkpoint_callback_params:
+        monitor: val_wer
+        mode: min
+        save_top_k: 15
+        always_save_nemo: true
+      resume_if_exists: true
+      resume_ignore_no_checkpoint: false
+      create_wandb_logger: false
+      wandb_logger_kwargs:
+        name: null
+        project: null
+    
+[NeMo W 2024-06-03 04:58:10 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/lightning_fabric/plugins/environments/slurm.py:168: PossibleUserWarning: The `srun` command is available on your system but is not used. HINT: If your intention is to run Lightning on SLURM, prepend your python command with `srun` like so: srun python inference.py --config-path=examples/asr/conf/conform ...
+      rank_zero_warn(
+    
+[NeMo I 2024-06-03 04:58:10 exp_manager:658] Resuming training from checkpoint: /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39/checkpoints/Conformer-CTC-Char--val_wer=0.2807-epoch=55-last.ckpt
+[NeMo I 2024-06-03 04:58:10 exp_manager:396] Experiments will be logged at /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39
+[NeMo I 2024-06-03 04:58:10 exp_manager:856] TensorboardLogger has been set up
+[NeMo I 2024-06-03 04:58:26 collections:196] Dataset loaded with 353808 files totalling 883.41 hours
+[NeMo I 2024-06-03 04:58:26 collections:197] 21295 files were filtered totalling 243.63 hours
+[NeMo W 2024-06-03 04:58:26 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo I 2024-06-03 04:58:26 collections:196] Dataset loaded with 5842 files totalling 9.94 hours
+[NeMo I 2024-06-03 04:58:26 collections:197] 0 files were filtered totalling 0.00 hours
+[NeMo I 2024-06-03 04:58:26 collections:196] Dataset loaded with 5365 files totalling 9.58 hours
+[NeMo I 2024-06-03 04:58:26 collections:197] 0 files were filtered totalling 0.00 hours
+[NeMo I 2024-06-03 04:58:26 features:289] PADDING: 0
+[NeMo I 2024-06-03 04:58:27 ctc_models:70] 
+    Replacing placeholder number of classes (-1) with actual number of classes - 52
+[NeMo I 2024-06-03 04:58:27 conv_asr:428] num_classes of ConvASRDecoder is set to the size of the vocabulary: 52.
+[NeMo I 2024-06-03 04:58:27 ctc_beam_decoding:225] Beam search algorithm: pyctcdecode
+[NeMo W 2024-06-03 04:58:29 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+      warnings.warn(_create_warning_msg(
+    
+[NeMo I 2024-06-03 04:58:33 ctc_decoding:309] Beam search requires that consecutive ctc tokens are not folded. 
+    Overriding provided value of `fold_consecutive` = True to False
+[NeMo I 2024-06-03 04:59:03 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:03 wer:330] reference:>hlA bkm m$AhdynA AlkrAm fy Hlqp jdydp mn brnAmj AlAqtSAd wAlnAs mwDwE HlqtnA lh*A Alywm
+[NeMo I 2024-06-03 04:59:03 wer:331] predicted:>hlA bkm m$AhdynA AlkrAm fy Hlqp jdydp mn brnAmj AlAqtSAd wAlnAs mwDwE HlqtnA lh*A Alywm
+[NeMo I 2024-06-03 04:59:03 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:03 wer:330] reference:tjAwz Hjm h*A AlqTAE E$rp mlyArAt dwlAr snwyA fy Almmlkp AlErbyp AlsEwdyp
+[NeMo I 2024-06-03 04:59:03 wer:331] predicted:tjAwz Hjm h*A AlqTAE p mlyArAt dwlAr snwyA fy Almmlkp AlErbyp AlsEwdyp
+[NeMo I 2024-06-03 04:59:04 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:04 wer:330] reference:AlErs bdh mblg mn AlmAl whydy m$ mtwfr fmA fy Hl <lA n>x* qrD mn Albnk
+[NeMo I 2024-06-03 04:59:04 wer:331] predicted:AlErs bdh mblg mn AlmAl wh*h dA m$ mtwfr fmA fy Hl <lA n>x* krd mn Albwn
+[NeMo I 2024-06-03 04:59:04 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:04 wer:330] reference:fy slE <HnA AstHdvnAhA fy Alswq
+[NeMo I 2024-06-03 04:59:04 wer:331] predicted:fy <HnA AsthdfnA fy Alswq
+[NeMo I 2024-06-03 04:59:05 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:05 wer:330] reference:w>HyAnA jdA nsbp D}ylp jdA nrhn AlsyArp >nt EArf >n AlsyArp AlEqAr mmkn trhnh bs >mwl >vAv
+[NeMo I 2024-06-03 04:59:05 wer:331] predicted:>HyAnA jdA nsbp D}ylp jdA nrhn En AlsyArp l>n tEArf >n AlsyArp Al|r mkn A bs >n A mA wl >vAr A
+[NeMo I 2024-06-03 04:59:05 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:05 wer:330] reference:bAlnsbp lh*h Alklf syd mHmd >lA ytHmlhA Almsthlk
+[NeMo I 2024-06-03 04:59:05 wer:331] predicted:bAlnsbp lh*h Alklb syd mHmd >lA ytHmlhA Almsthlk
+[NeMo I 2024-06-03 04:59:06 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:06 wer:330] reference:E$An yHmy Hq AlmwATn Al$q AlvAny *krt >n lAzm AlEmyl >y jhp tmwyl swA' kAnt $rkp >w bnk ydrshA
+[NeMo I 2024-06-03 04:59:06 wer:331] predicted:E$An yHmy Hql AlmwATn Al$q AlvAny >n *krt >nh lAzm AlEmyl >y jhp tmwyl swA' kAn $rkp >w bnk ydrshA
+[NeMo I 2024-06-03 04:59:06 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:06 wer:330] reference:yEny <*A >nt k$rkp wTnyp mA >ETyth AlmjAl <n hw
+[NeMo I 2024-06-03 04:59:06 wer:331] predicted:yEny <*A >nt k$rkp wTnyp mA >ETyth AlmjAl >nh hw
+[NeMo I 2024-06-03 04:59:06 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:06 wer:330] reference:$wf >wl EA}d <HnA ntTlE l<lh hw AlElAqp mE AlEmyl <HnA ElAqtnA mE AlEmyl lA bd >n tkwn mstmrp wAltwASl mstmr
+[NeMo I 2024-06-03 04:59:06 wer:331] predicted:$wf >wl EA}d <HnA ntTlE ElY lh hw AlElAqp mE AlEmyl <HnA ElAqtnA mE AlEmyl lA bd >n tkwn mstmrp wltwASl mstmr
+[NeMo I 2024-06-03 04:59:07 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:07 wer:330] reference:AlnZAm wmA*A En AlslbyAt
+[NeMo I 2024-06-03 04:59:07 wer:331] predicted:AlnZAm wmA*A En AlslbyAt
+[NeMo I 2024-06-03 04:59:07 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:07 wer:330] reference:rgm >n AlbyE bAltqsyT shl w<grA'Ath kvyrp <lA >nh ydfE kvyrA mn AlnAs llgrq bAldyn
+[NeMo I 2024-06-03 04:59:07 wer:331] predicted:>n AlbyE btqsyT shl w<jrA'Ath kvyrp <lA >n ydfEwA kvyrA mn AlnAs llgrq bAldyn
+[NeMo I 2024-06-03 04:59:08 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:08 wer:330] reference:Ally mA mEh mA bylzmh mA byErf$ AlwAHd kyf AlZrwf btSyr mEh
+[NeMo I 2024-06-03 04:59:08 wer:331] predicted:Al mA mEh mA bAlzmn mA bErf AlwAHd kyn fy AlZrwf tSyr mEh
+[NeMo I 2024-06-03 04:59:08 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:08 wer:330] reference:m$AhdynA AlkrAm bEd qlyl nrSd Al<yjAbyAt wAlslbyAt llbyE bAltqsyT AbqwA mEnA
+[NeMo I 2024-06-03 04:59:08 wer:331] predicted:m$AhdynA AlkrAm bEd qlyl nrSd Al<yjAbyAt wAlslbyAt llbyE bAltqsyT AbqwA mEnA
+[NeMo I 2024-06-03 04:59:09 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:09 wer:330] reference:bnlj> ll$rA' bAl>qsAT llslE AlkmAlyp mvlA AlsyArp Al>dwAt AlkhrbA}yp
+[NeMo I 2024-06-03 04:59:09 wer:331] predicted:nlj> ll$rAb Al>qSY llslEp AlkmAlyp mvlA AlsyArp Al>dwAt AlkhrbA}yp
+[NeMo I 2024-06-03 04:59:09 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:09 wer:330] reference:dA Al$y' jmyl jdA tjd >$yA' jmylp Anh >nA tmknt >nA w>srty EndnA vlAjp fy Albyt
+[NeMo I 2024-06-03 04:59:09 wer:331] predicted:$y' jmyl jdA j A jmylp >nh A mA knt En Allh fn j fy Albyt
+[NeMo I 2024-06-03 04:59:10 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:10 wer:330] reference:wysAEdnA fy AlHyAp AlmEy$yp wAlAqtSAdyp
+[NeMo I 2024-06-03 04:59:10 wer:331] predicted:ysAEdnA fy AlHyAp AlmEy$yp wAlAqtSAdyp
+[NeMo I 2024-06-03 04:59:10 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:10 wer:330] reference:Al|n AlEdd Hqyqp AlrAgbyn fy byE Al|jl Em yzdAd bsbb wADH
+[NeMo I 2024-06-03 04:59:10 wer:331] predicted:Al|n AlEdd Hqyqp AlrAgbyn fy byE Al|jl Em yzdAd bsbb wADH
+[NeMo I 2024-06-03 04:59:10 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:10 wer:330] reference:Alsbb bbsATp Alsbb hw ArtfAE Al>sEAr wAlwDE AlAqtSAdy AlEAm swA' kAn fy Al>rdn xASp >w fy AlmnTqp EAmp
+[NeMo I 2024-06-03 04:59:10 wer:331] predicted:Alsbb bsATp Alsbb hw ArtfAE Al>sEAr wAlwDE AlAqtSAdy AlEAm swA' kAn fy Al>rdn xASp >w fy AlmnTqp EAm p
+[NeMo I 2024-06-03 04:59:11 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:11 wer:330] reference:rwAbT mr>p jmEyAt >yDA mE Al>frAd
+[NeMo I 2024-06-03 04:59:11 wer:331] predicted:rwAbT nrY jmEyAt >yDA mE Al>frAd
+[NeMo I 2024-06-03 04:59:11 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:11 wer:330] reference:lkn AHnA bnTlb mn AlEmyl DAmn
+[NeMo I 2024-06-03 04:59:11 wer:331] predicted:lkn <HnA nTlb mn AlEmyl DAmnA
+[NeMo I 2024-06-03 04:59:11 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:11 wer:330] reference:bhA AlbTAqp bHsb Almblg <ly rAH t$try fyh bAltqsyT hA Almblg
+[NeMo I 2024-06-03 04:59:11 wer:331] predicted:AlbTAqp Hsb Almblg Ally rAH t$try fyh bAltqSyr h mblg
+[NeMo I 2024-06-03 04:59:12 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:12 wer:330] reference:wfy bED AlnAs AlvAnyyn Ally by$wfwhA Edymp AlfA}dp nZrA l>nh Almblg Ally bynEml Elyh blwk wmA byEwd byqdr ytSrf fyh bAlbnk
+[NeMo I 2024-06-03 04:59:12 wer:331] predicted:wfy bED AlnAs AlvAnyyn Ally y$wfwh Ely m AlfA}dp nZrA l>nh Almblg bAlEmAl AlElA blwf mA yEwdwA bqdr ytSrf fyh bAlbnk
+[NeMo I 2024-06-03 04:59:12 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:12 wer:330] reference:Tb mHmd hl tqwm bzyAdp Al>sEAr l>nk tbyE bAltqsyT >m >nk tbqY ElY nfs Al>sEAr Alrsmyp
+[NeMo I 2024-06-03 04:59:12 wer:331] predicted:Tyb mHmd hl tqwm bzyAdp Al>sEAr l>nk kbyr bAltqsyT >m >nk tbqY ElY nfs Al>sEAr Alrsmyp
+[NeMo I 2024-06-03 04:59:13 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:13 wer:330] reference:En Tryq tslym AlslEp HAlyA wAstlAm AlmbAlg ElY Edp >qsAT bftrAt lAHqp
+[NeMo I 2024-06-03 04:59:13 wer:331] predicted:>w A En Tryq tslym AlslEp HAlyA wAstlAm AlmbAlg ElY Edp >qSAS bftrAt lAHqp
+[NeMo I 2024-06-03 04:59:13 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:13 wer:330] reference:mn bED Al|vAr Alslbyp >n Emlyp AlbyE bAltqsyT b$kl EAm
+[NeMo I 2024-06-03 04:59:13 wer:331] predicted:bED Al|vAr Alslbyp >nh Emlyp AlbyE bAltxSyS b$kl EAm
+[NeMo I 2024-06-03 04:59:13 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:13 wer:330] reference:>yn ynt$r fy mnTqtnA AlErbyp
+[NeMo I 2024-06-03 04:59:13 wer:331] predicted:>yn ynt$r fy mnTqtnA AlErbyp A
+[NeMo I 2024-06-03 04:59:14 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:14 wer:330] reference:$rkp qwyp qAdrp ElY yEny tmwyl Al>frAd wAlzbA}n wjmyE mn yTlb h*h AlslE
+[NeMo I 2024-06-03 04:59:14 wer:331] predicted:>n $rkp qwyp qAdrp ElY yEny tmwyl Al>frAd wAlzbA}n wjmyE mn yTlb h*h Alslp
+[NeMo I 2024-06-03 04:59:14 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:14 wer:330] reference:fy tEzyz Alnmw AlAqtSAdy wAlsyTrp ElY AltDxm wtxfyD AlbTAlp
+[NeMo I 2024-06-03 04:59:14 wer:331] predicted:fy tEzyz Alnmw AlAqtSAdy wAlsyTrp ElY AltDxm wtxfyD AlbTAlp
+[NeMo I 2024-06-03 04:59:14 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:14 wer:330] reference:tqryr mrym >wbAyy$ Al*y yrSd >wDAE Alymn wlybyA mn AlnAHyp AlmAlyp wAlnqdyp
+[NeMo I 2024-06-03 04:59:14 wer:331] predicted:tqryr mrym >wbAyy$ Al*y yrSd >wDAE Alymn wlybyA mn AlnAHyp AlmAlyp wAlnqdyp
+[NeMo I 2024-06-03 04:59:15 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:15 wer:330] reference:tzdAd AlmxAwf mE >nbA' mn Albnk Almrkzy Alymny En Edm wjwd sywlp tstTyE wqf AltDxm AlmtwqE
+[NeMo I 2024-06-03 04:59:15 wer:331] predicted:tzdAd AlmxAwf mE >nbA' mn Albnk Almrkzy Alymny En Edm wjwd sywlp tstTyE wqf AltDxm AlmtwqE
+[NeMo I 2024-06-03 04:59:15 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:15 wer:330] reference:yEy$ vlv skAn Alymn ElY >ql mn dwlAryn fy Alywm wtqdr AlbTAlp bnHw xmsp wvlAvyn bAlm}p
+[NeMo I 2024-06-03 04:59:15 wer:331] predicted:yEy$ vlv skAn Alymn ElY >ql mn dwlAryn fy Alywm wtqdr AlbTAlp bnHw m
+[NeMo I 2024-06-03 04:59:15 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:15 wer:330] reference:ArtfEt EmlyAt sHb gyr msbwq llwdA}E ElY mdAr Al>$hr AlmADyp bEyd trAjE <yrAdAt Aldwlp
+[NeMo I 2024-06-03 04:59:15 wer:331] predicted:ArtfEt EmlyAt sHb gyr msbwq llwdA' ElY mdAr Al>$hr AlmADyp bEyd trAjE <rAdAt Aldwlp
+[NeMo I 2024-06-03 04:59:16 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:16 wer:330] reference:<* >Elnt t>sys wzArp llnfT wbnk mrkzy xAS bhA fy tmwz ywlyw AlmADy
+[NeMo I 2024-06-03 04:59:16 wer:331] predicted:<* >Elnt t>sys wzArp llnfT wbnk mrkzy xAS bhA fy tmwz ywlyw AlmADy
+[NeMo I 2024-06-03 04:59:16 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:16 wer:330] reference:bAls&Al syd mSTfY hl bAlDrwrp AlADTrAbAt AlsyAsyp wAl>mnyp ySHbhA
+[NeMo I 2024-06-03 04:59:16 wer:331] predicted:bAls&Al syd mSTfY hl bAlDrwrp AlADTrAbAt AlsyAsyp wAl>mnyp ySHbhA
+[NeMo I 2024-06-03 04:59:16 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:16 wer:330] reference:bh*h Al>HdAv
+[NeMo I 2024-06-03 04:59:16 wer:331] predicted:>w bh*h Al>HdAv
+[NeMo I 2024-06-03 04:59:17 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:17 wer:330] reference:kAnt HtY AlmSArf >yDA fy Aldwl Alty $hdt >w dwl AlrbyE AlErby wgyrhA mn Aldwl AlErbyp hy
+[NeMo I 2024-06-03 04:59:17 wer:331] predicted:kAnt HtY AlmSArf >yDA fy Aldwl Alty $hdt >w dwl AlrbyE AlErby wgyrhA mn Aldwl AlErbyp hy
+[NeMo I 2024-06-03 04:59:17 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:17 wer:330] reference:mA hw Alt>vyr AlmbA$r lmA tEy$h lybyA ElY wDE ElY wDEhA Alnqdy wAlAHtyATy wEmlthA Alywm
+[NeMo I 2024-06-03 04:59:17 wer:331] predicted:mA hw Alt>vyr AlmbA$r lmA tEy$h lybyA ElY wDEhA Alnqdy wAlAHtyATy wEmlthA Alywm
+[NeMo I 2024-06-03 04:59:17 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:17 wer:330] reference:>dY *lk <lY tdny kbyr jdA fy Al<yrAdAt wzAd *lk AljrH EmqA
+[NeMo I 2024-06-03 04:59:17 wer:331] predicted:>dY *lk <lY tdny kbyr jdA fy Al<yrAdAt wzAd *lk AljrH EmqA
+[NeMo I 2024-06-03 04:59:18 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:18 wer:330] reference:b>nh fy AlEAlm AlErby b$kl EAm >w >kvryp dwl AlEAlm AlErby
+[NeMo I 2024-06-03 04:59:18 wer:331] predicted:b>nh fy AlEAlm AlErby b$kl EAm >w >kvryp dwl AlEAlm AlErby
+[NeMo I 2024-06-03 04:59:18 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:18 wer:330] reference:fy tEAml mSrf lybyA Almrkzy mE Al>zmp AlmAlyp wtdAEyAthA mn* mTlE h*h Al>zmp wtHdydA fy $hr sbtmbr >lfyn wvlAv E$r
+[NeMo I 2024-06-03 04:59:18 wer:331] predicted:fy tEAml mSrf lybyA Almrkzy mE Al>zmp AlmAlyp wtdAEyAthA mn* mTlE h*h Al>zmp wtHdydA fy $hr sbtmbr
+[NeMo I 2024-06-03 04:59:18 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:18 wer:330] reference:Al*y qAmt bh AlslTAt Altnfy*yp wk*lk Alt$ryEyp
+[NeMo I 2024-06-03 04:59:18 wer:331] predicted:Al*y qAmt bh AlslTAt Altnfy*yp wk*lk Alt$ryEyp
+[NeMo I 2024-06-03 04:59:19 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:19 wer:330] reference:>sbwEyA fy Alswq AlmHlyp wAthmt AlslTAt $rkAt AlSrAfp fy dm$q bAltsbb fy h*A AltrAjE
+[NeMo I 2024-06-03 04:59:19 wer:331] predicted:>sbwEyA fy Alswq AlmHlyp wAthmt AlslTAt $rkAt AlSrAfp fy dm$q bAltsbb fy h*A AltrAjE
+[NeMo I 2024-06-03 04:59:19 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:19 wer:330] reference:<*A twqf AlmSrf Almrkzy En Dx AlEmlAt Al>jnbyp wtrAjEt AlsTwp Al>mnyp
+[NeMo I 2024-06-03 04:59:19 wer:331] predicted:<*A twqf AlmSrf Almrkzy En Dx AlEmlAt Al>jnbyp wtrAjEt AlsTwp Al>mnyp
+[NeMo I 2024-06-03 04:59:19 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:19 wer:330] reference:AlHqyqp bEd >rbE snwAt mn bd' Alvwrp Alswryp
+[NeMo I 2024-06-03 04:59:19 wer:331] predicted:AlHqyqp bEd >rbE snwAt mn bd' Alvwrp Alswryp
+[NeMo I 2024-06-03 04:59:20 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:20 wer:330] reference:Al|n nHn Alywm yEny sjl AldwlAr Alywm bHlb tlAtmyp wAHd wstyn lyrp yEny bqy mn qymp Allyrp Alswryp bHdwd sbEtA$ bAlmyp
+[NeMo I 2024-06-03 04:59:20 wer:331] predicted:Al|n nHn Alywm yEny sjl AldwlAr Alywm bHlb lyrp yEny >nA bqy mn qymp Allyrp Alswryp bHdwd l
+[NeMo I 2024-06-03 04:59:20 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:20 wer:330] reference:wAl<ElAmyp >yDA >nh lwlA Altmwyl Al<yrAny fy swryA lAnhAr AlnZAm AlmAly wAnhAr AlAqtSAd tmAmA fy swryA
+[NeMo I 2024-06-03 04:59:20 wer:331] predicted:wAl<ElAmyp >yDA >nh lwlA Altmwyl Al<yrAny fy swryA lAnhAr AlnZAm AlmAly wAnhAr AlAqtSAd tmAmA fy swryA
+[NeMo I 2024-06-03 04:59:21 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:21 wer:330] reference:hy HwAfz >w Eb' ElY AlAqtSAd EnA nHn Allyrp Em t$tgl fy mnTqp AlnZAm
+[NeMo I 2024-06-03 04:59:21 wer:331] predicted:hy HwAfz >w Eb' ElY AlAqtSAd EndnA nHn Allyrp mA t$tgl fy mnTqp AlnZAm
+[NeMo I 2024-06-03 04:59:21 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:21 wer:330] reference:bqyt mnATq fy Hlb wfy Alrqp
+[NeMo I 2024-06-03 04:59:21 wer:331] predicted:Al bqt mnATq fy Hlb wfy Alrqp
+[NeMo I 2024-06-03 04:59:21 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:21 wer:330] reference:yxff AlDgT ElY >rSdp AlAHtyATy Alnqdy wyEzz AlSAdrAt wAlAstvmAr
+[NeMo I 2024-06-03 04:59:21 wer:331] predicted:yxff AlDgT ElY >rSdp AlAHtyATy Alnqdy wyEzz AlSAdrAt wAlAstvmAr
+[NeMo I 2024-06-03 04:59:22 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:22 wer:330] reference:bsm Allh AlrHmn AlrHym AlwAqE <n AlAHtyATy zy mA HDrtk mA qlt dlwqty stA$r wtlAtp mn E$rp mlyAr dwlAr
+[NeMo I 2024-06-03 04:59:22 wer:331] predicted:Allh AlrHmn AlrHym AlwAqE AlAHtyATy <*A HDrtk mA qlt dy lwqt w m mlyAr dwlAr
+[NeMo I 2024-06-03 04:59:22 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:22 wer:330] reference:fy Hdwd tlAtp wtlAtp mn E$rp fy Almyp Al$hr Ally qblyh bHdwd tsEp w>rbEp mn E$rp fy Almyp
+[NeMo I 2024-06-03 04:59:22 wer:331] predicted:Hdwd Al$hr Al blyh bHdwd m
+[NeMo I 2024-06-03 04:59:23 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:23 wer:330] reference:fdy dA Al>sAs Almwjwd Ally hw bytklm fyh f>nt Endk dlwqty ll>sf Al$dyd h*h AlmnH wh*h AlmEwnAt
+[NeMo I 2024-06-03 04:59:23 wer:331] predicted:fdh Al>sAsy Almwjwd Al*y hw ytklm fyh f>nt Endk dy Alwqt ll>sf Al$dyd h*h AlmnH wh*h AlmEAnAp
+[NeMo I 2024-06-03 04:59:24 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:24 wer:330] reference:fAlklAm dA klh fy gyr mHlh AlklAm dA yHSl AmtY lw >nA SAdrAty fElA vrw SAdrAty qwyp wmnt$rp ElY mstwY AlEAlm
+[NeMo I 2024-06-03 04:59:24 wer:331] predicted:fAlklAm dA klh fy gyr mHlh AlklAm dA yHSl >nt lw >nA SAdrAty fElA SAdrAt qwyp wmnt$rp ElY mstwY AlEAlm
+[NeMo I 2024-06-03 04:59:24 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:24 wer:330] reference:s&Al mhm jdA hw >qyl AlHqyqp yEny lyh >rgm l>nh hw Ally HSl Alrjl
+[NeMo I 2024-06-03 04:59:24 wer:331] predicted:s&Al mhm jdA hw >qyl Hqyqp yEny lyh >rgm l>nh hw Al*y HSl Alrjl
+[NeMo I 2024-06-03 04:59:25 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:25 wer:330] reference:wSlt tmAnyp w>rbEyn wwAHd mn E$rp mlyAr dwlAr yEny Aldywn AlxArjyp zAdt mn $hr tlAtp Ally fAt fqT
+[NeMo I 2024-06-03 04:59:25 wer:331] predicted:wSlt wAHd mn mlyAr dwlAr yEny Aldwr AlxArjyp zAdt mn $hr AlfAt fqT
+[NeMo I 2024-06-03 04:59:25 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:25 wer:330] reference:Al*y kAn fy HDrmwt EAd <lY mktbth >w <lY mktbh
+[NeMo I 2024-06-03 04:59:25 wer:331] predicted:Al*y kAn fy HDrmwt EAd <lY mktbh >w <lY mktbh
+[NeMo I 2024-06-03 04:59:25 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:25 wer:330] reference:Edd mn AlqrArAt gyr Alr$ydp >w qrArAt ArtjAlyp tm AtxA*hA mn qbl
+[NeMo I 2024-06-03 04:59:25 wer:331] predicted:Edd mn AlqrArAt gyr Alr$ydp >w qrArAt ArtjAlyp tm AtxA*hA mn qbl
+[NeMo I 2024-06-03 04:59:26 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:26 wer:330] reference:twqft bSwrp $bh kAmlp fy Alkvyr mn AlqTAEAt AlAqtSAdyp Alsmkyp wAlzrAEyp wgyrhA bsbb AlHrb AlrAhnp
+[NeMo I 2024-06-03 04:59:26 wer:331] predicted:twqft bSwrp $bh kAmlp fy kvyr mn AlqTAEAt AlAqtSAdyp Alsmkyp wAlzrAEyp wgyrhA bsbb AlHrb AlrAhnp
+[NeMo I 2024-06-03 04:59:26 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:26 wer:330] reference:<jrA'At AtbEhA AlmHAfZ AlHAly wy$hd lh bAlkvyr mn AlkfA'p
+[NeMo I 2024-06-03 04:59:26 wer:331] predicted:<jrA'At AtbEhA AlmHAfZ AlHAly wy$hd lh bAlkvyr mn AlkfA'p
+[NeMo I 2024-06-03 04:59:26 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:26 wer:330] reference:bEd Ewdth wlw bnsbp D}ylp nEm nEm nEm
+[NeMo I 2024-06-03 04:59:26 wer:331] predicted:bEd Ewdth wlw bnsbp D}ylp nEmnEm
+[NeMo I 2024-06-03 04:59:27 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:27 wer:330] reference:fy AlHqyqp mwDwE Alsywlp AlmSrf Almrkzy mSrf lybyA Almrkzy lm yDE >yp qywd ElY Alsywlp
+[NeMo I 2024-06-03 04:59:27 wer:331] predicted:fy AlHqyqp mwDwE Alsywlp llmSrf Alky mSrf lybyA Almrkzy lm yDE >yp qywd ElY Alsywlp
+[NeMo I 2024-06-03 04:59:27 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:27 wer:330] reference:En tjrbp Alymn wgyrhA >$ArwA <lY h*A Al>mr bwDwH w>n AlmSrf Almrkzy kAn fElA ymvl SmAm Al>mAn
+[NeMo I 2024-06-03 04:59:27 wer:331] predicted:En tjrbp Alymn wgyrhA >$ArwA <lY n h*A Al>mr bwDwH w>n AlmnSf Almrkzy kAn fElA ymvl SmAm Al>mAn
+[NeMo I 2024-06-03 04:59:27 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:27 wer:330] reference:mSrf lybyA Almrkzy b<dArth AlEAmp fy TrAbls wfrwEh AltAbEp lh
+[NeMo I 2024-06-03 04:59:27 wer:331] predicted:mSrf lybyA Almrkzy b<dArth AlEAmp fy TrAbls wfrwEh AltAbEp lh
+[NeMo I 2024-06-03 04:59:28 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:28 wer:330] reference:fy AlHqyqp mnHh vqp mHlyp >wlA vm vqp Al>TrAf Aldwlyp mA zAl <lY h*A Alywm Al>TrAf Aldwlyp ttEAml mE AlmSrf Almrkzy
+[NeMo I 2024-06-03 04:59:28 wer:331] predicted:fy AlHqyqp mnHh vqp mHlyp >wlA vm vqp Al>TrAf Aldwlyp mA zAl <lY h*A Alywm Al>TrAf Aldwlyp ttEAml mE AlmSrf Almrkzy
+[NeMo I 2024-06-03 04:59:29 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:29 wer:330] reference:yqwm bh*h AlhmAm nEm wADH Abq mEy syd mSTfY Alsyd mn gAzy EntAb bmA >nnA ntHdv En Albnwk AlmwAzyp
+[NeMo I 2024-06-03 04:59:29 wer:331] predicted:yqwm bh*h wADH Abq mEy syd mSTfY Alsyd mn gAzy EntAb bmA >nnA ntHdv En Albnwk AlmwAzyp
+[NeMo I 2024-06-03 04:59:29 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:29 wer:330] reference:hw lys llr}ys HA b$Ar Al>sd >w HAfZ Al>sd >w |lh >w >mh >w >xth
+[NeMo I 2024-06-03 04:59:29 wer:331] predicted:hw lys llr}ys b$Ar Al>sd >w HAfZ Al>sd >w |lh >w >mh >w >xth
+[NeMo I 2024-06-03 04:59:30 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:30 wer:330] reference:bdAyp >nA >Hb >qwl HAjp bAlnsbp lAHtyATAt Alnqd fy mSr dlwqty yEtbr klh bSwrp wdA}E <ly hm stA$r wtlAtp mn E$rp
+[NeMo I 2024-06-03 04:59:30 wer:331] predicted:bdAyp >nA Hb >qwl HAjp bAlnsbp lAHtyAT Alnqd mSr dy Alwqt yEtbr klh fwrp wdAEp Ally hm S
+[NeMo I 2024-06-03 04:59:30 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:30 wer:330] reference:$y' TbyEy lltDxm Almstwrd AljAy mn xArj mSr f>nt dlwqty Ally HytHml AlfAtwrp dy klhA
+[NeMo I 2024-06-03 04:59:30 wer:331] predicted:$y' TbyEy lltDxm Almstwrd Aljy mn xArj mSr f>nt hdh Alwqt Ally sytHml AlfAtwrp h*h klhA
+[NeMo I 2024-06-03 04:59:31 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:31 wer:330] reference:AllY HytHmlh fy AlnhAyp hw AlmwATn AlbsyT ntyjp lArtfAE mzmn fy Al>sEAr wdA mmkn ywSl Aldwlp zy mA qlt lHDrtk lEdm qdrthA
+[NeMo I 2024-06-03 04:59:31 wer:331] predicted:Ally ytHmlh fy AlnhAyp hw AlmwATn AlbsyT ntyjp lArtfAE mzmn fy Al>sEAr wh*A mmkn ywSl lldwlp zy mA qlt lHDrtk llEdm qdrthA
+[NeMo I 2024-06-03 04:59:31 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:31 wer:330] reference:dA Ally EAwz yTbqh fnfs AlqDyp hyjy mHAfZ bnk mrkzy m$ Hyqdr lA bd ynf* dA Al dA AllY $fnAh
+[NeMo I 2024-06-03 04:59:31 wer:331] predicted:dh Ally HAfz ytbEwh fnfs AlqDyp syj HAfZ bnky mrkzy m$ syqdr lA bd ynfs dA Aly $fnAhA
+[NeMo I 2024-06-03 04:59:32 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:32 wer:330] reference:mdnyyn lhm qdrp ElY fhm AlAqtSAd xbrA' fy h*A AljAnb bynZrwA llwAqE AllY hm EAy$yn fyh
+[NeMo I 2024-06-03 04:59:32 wer:331] predicted:mdnyyn lhm qdrp ElY fhm AlAqtSAd xbrA' fy h*A AljAnb ynZrwA llwAqE Ally hm EAy$yn fyh
+[NeMo I 2024-06-03 04:59:32 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:32 wer:330] reference:dA vmAr wntAj TbyEy llmwjwd ntyjp lEskrp AlAqtSAd fy mSr >wd >n >Ewd <lY Alsyd mSTfY Alsyd mn gAzy EntAb
+[NeMo I 2024-06-03 04:59:32 wer:331] predicted:A vmAr wntAj TbyEy Almwjwd ntyjp AlEskrp AlAqtSAdy wd >n >Ewd <lY Alsyd mSTfY Alsyd mn gAzy EntAb
+[NeMo I 2024-06-03 04:59:33 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:33 wer:330] reference:Alfkrp AlvAnyp >Tlqt fy Hlb qbl ftrp mn qbl bED tjAr AlEmlp AllY Endhm
+[NeMo I 2024-06-03 04:59:33 wer:331] predicted:Alfkr AlvAnyp >Tlqt fy Hlb qbl ftrp mn qbl bED AltjAr AlEmly Ally EndhA E
+[NeMo I 2024-06-03 04:59:33 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:33 wer:330] reference:tmvlt fy tEwym sEr Alm$tqAt AlnfTyp wAlsmAH bAstyrAdh w>yDA bqrArAt <dAryp AlHqyqp
+[NeMo I 2024-06-03 04:59:33 wer:331] predicted:tmvlt fy tEwym sEr Alm$tqAt AlnfTyp wAlsmAH bAstyrAdh w>yDA bqrArAt <dAryp AlHqyqp
+[NeMo I 2024-06-03 04:59:33 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:33 wer:330] reference:Albnk Almrkzy ElY Al>ql AlHfAZ ElY AlHd Al>dnY whw ElY HAjtyn >sAsytyn hy ms>lp AlmrtbAt
+[NeMo I 2024-06-03 04:59:33 wer:331] predicted:>w Albnk Almrkzy ElY Al>ql AlHfAZ ElY AlHd Al>dnY whw ElY HAjtyn >sAsytyn hy ms>lp AlmrtbAt
+[NeMo I 2024-06-03 04:59:34 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:34 wer:330] reference:fy dwl AlrbyE AlErby wqtnA AnthY ElY kl n$kr DywfnA jmyEA
+[NeMo I 2024-06-03 04:59:34 wer:331] predicted:fy dwl AlrbyE AlErby wqtnA AnthY ElY kl n$kr DywfnA jmyEA
+[NeMo I 2024-06-03 04:59:34 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:34 wer:330] reference:wDEt $rkAt EAlmyp >nZArhA ElY grb wwsT >fryqyA mwTn zyt Alnxyl
+[NeMo I 2024-06-03 04:59:34 wer:331] predicted:wDEt $rkAt EAlmyp >nZArhA ElY grb wwsT <fryqyA mwTny zyt Alnxyl
+[NeMo I 2024-06-03 04:59:34 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:34 wer:330] reference:wlkn kmA hw AlHAl mE Alkvyr mn AlSnAEAt Alvqylp fqd tHqq *lk bvmn
+[NeMo I 2024-06-03 04:59:34 wer:331] predicted:wlkn kmA hw AlHAl mE Alkvyr mn AlSnAEAt Alvqylp fqd tHqq *lk bvmn
+[NeMo I 2024-06-03 04:59:34 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:34 wer:330] reference:H*rhm qA}lA AntbhwA <*A lm thtmwA bgAbAtkm w<*A lm tHAfZwA ElyhA
+[NeMo I 2024-06-03 04:59:34 wer:331] predicted:H*rhm qA}lA AntbhwA <*A lm thtmwA bgAbAtkm w<*A lm tHAfZ ElyhA
+[NeMo I 2024-06-03 04:59:35 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:35 wer:330] reference:syAstnA AlzrAEyp Aljdydp Alty thdf <lY jEl AlkAmyrwn
+[NeMo I 2024-06-03 04:59:35 wer:331] predicted:syAstnA AlzrAEyp Aljdydp Alty thdf <lY jEl AlkAmyrwn
+[NeMo I 2024-06-03 04:59:35 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:35 wer:330] reference:>w mE AlmnZmAt AlmHlyp gyr AlHkwmp wAlskAn AlmHlyyn Al*yn syqAtlwn mn >jl Hqwqhm
+[NeMo I 2024-06-03 04:59:35 wer:331] predicted:>w mA AlmnZmAt AlmHlyp gyr AlHkwmyp wAlskAn AlmHlyyn Al*yn syqAtlwn mn >jl Hqwqhm
+[NeMo I 2024-06-03 04:59:35 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:35 wer:330] reference:lqd bd>nA AstvmArA fy grb >fryqyA bqymp nhA}yp blgt tsEmA}p mlywn dwlAr
+[NeMo I 2024-06-03 04:59:35 wer:331] predicted:lqd bd>nA AstvmArA fy grb <fryqyA bqmp nhA}yp blgt t mlywn dwlAr
+[NeMo I 2024-06-03 04:59:36 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:36 wer:330] reference:wykwn fy wsEhm <rsAl Al>TfAl <lY Almdrsp AlmzrEp stjlb AlmrAfq AlAjtmAEyp <lY AlmnTqp wtlk stjlb lhA Altnmyp
+[NeMo I 2024-06-03 04:59:36 wer:331] predicted:wykwn fy wsEhm <rsAl Al>TfAl <lY Almdrsp AlmzrEp stjlb AlmrAfq AlAjtmAEyp <lY AlmnTqp wtlk stjlb lhA Altnmyp
+[NeMo I 2024-06-03 04:59:36 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:36 wer:330] reference:rsAlp xASp wSlt mn Sdyq xAS l all for afria
+[NeMo I 2024-06-03 04:59:36 wer:331] predicted:rsAlp xASp wSlt mn Sdyq xAS l>wl fw >frqA
+[NeMo I 2024-06-03 04:59:36 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:36 wer:330] reference:mn Ajl msH Al>rD dAxl mnTqp AlAmtyAz AlmqtrHp lzyt Alnxyl wHlhA
+[NeMo I 2024-06-03 04:59:36 wer:331] predicted:mn >jl msH Al>rD dAxl mnTqp AlAmtyAz AlmqtrHp lzyt Alnxyl wHwlhA
+[NeMo I 2024-06-03 04:59:37 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:37 wer:330] reference:*lk Almrswm hw tfwyD r}Asy llmwAfqp ElY t>jyr Al>rADy
+[NeMo I 2024-06-03 04:59:37 wer:331] predicted:*lk Almrswm hw tfwyD r}Asy llmwAfqp ElY t>jyr Al>rADy
+[NeMo I 2024-06-03 04:59:37 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:37 wer:330] reference:wlm yErfwA kyf ytEAmlwn mEhA bEd *lk fqT EndmA r>wA mA wqEwA Elyh >drkwA >nhm ArtkbwA xT>
+[NeMo I 2024-06-03 04:59:37 wer:331] predicted:wlm yErfwA kyf ytEAmlwn mEhA bEd *lk fqT EndmA r>wA mA wqEwA Elyh >drkwA >nhm ArtkbwA xT>
+[NeMo I 2024-06-03 04:59:38 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:38 wer:330] reference:ybdw Al>mr grybA >n ykwn ldyk m$rwE mrbH mE gyAb tAm llDrA}b
+[NeMo I 2024-06-03 04:59:38 wer:331] predicted:ybdw Al>mr grybA >n ykwn ldyk m$rwE mrbH mE gyAb tAm llDrA}b
+[NeMo I 2024-06-03 04:59:38 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:38 wer:330] reference:>rdnA >n ns>l Alsyd mwtAzy lmA*A ybdw AlEqd mbrmA wfq $rwT sxyp ll$rkp
+[NeMo I 2024-06-03 04:59:38 wer:331] predicted:>rdnA >n ns>l Alsyd mwtAzy lmA*A ybdw AlEqd mbrmA wfq $rwT sxyp ll$rkp
+[NeMo I 2024-06-03 04:59:38 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:38 wer:330] reference:qdrt hyrAklyz >n qymp Al>x$Ab AlmqTwEp wHdhA stSl mn styn <lY tsEyn mlywn dwlAr >myrky
+[NeMo I 2024-06-03 04:59:38 wer:331] predicted:qdrt hyrAt lyz >n qymp Al>x$Ab AlmqTwEp wHdhA stSl mn <lY mlywn dwlAr >myrky
+[NeMo I 2024-06-03 04:59:38 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:38 wer:330] reference:w>SHAb Al>mlAk AlSgyrp wAlqrwyyn mn mnTqp lygwty jnwb grb AlkAmyrwn mA zAl AlEdyd mn h*h AlmfAwDAt jAryA
+[NeMo I 2024-06-03 04:59:38 wer:331] predicted:w>SHAb Al>mlAk AlSgyrp wAlqrwyyn mn mnTqp ngAty jnwb grb AlkAmyrwn mA zAl AlEdyd mn h*h AlmfAwDAt AljAryp
+[NeMo I 2024-06-03 04:59:39 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:39 wer:330] reference:AlTrqAt sy}p llgAyp
+[NeMo I 2024-06-03 04:59:39 wer:331] predicted:AlTrqAt sy}p llgAyp
+[NeMo I 2024-06-03 04:59:39 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:39 wer:330] reference:wh*A gAbAtkm klhA gAbAtnA lm tHtAjwA <lY tEyyn HdwdhA mn qbl lm nErf *lk mn qbl knA fqT nstxdm AlgAbp
+[NeMo I 2024-06-03 04:59:39 wer:331] predicted:wh*h gAbAtkm klhA gAbAtnA lm tHtAjw <lY tEyyn HdwdhA mn qbl lm nErf *lk mn qbl knA fqT nstxdmh AlgAbp
+[NeMo I 2024-06-03 04:59:40 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:40 wer:330] reference:hl ymknk <TEAm EA}ltk b*lk nEm ymknny *lk
+[NeMo I 2024-06-03 04:59:40 wer:331] predicted:hl ymknk <TEAm EA}ltk b*lk nEm ymknny *lk
+[NeMo I 2024-06-03 04:59:40 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:40 wer:330] reference:kl $y' mtwfr fy h*h AlgAbp
+[NeMo I 2024-06-03 04:59:40 wer:331] predicted:kl $y' mtwfr fy h*h AlgAbp
+[NeMo I 2024-06-03 04:59:40 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:40 wer:330] reference:l>nhm yjlbwn lnA Alkvyr mn AlmAl EndmA y>twn <lynA
+[NeMo I 2024-06-03 04:59:40 wer:331] predicted:l>nhm yjlbwn lnA Alkvyr mn AlmAl EndmA y>twn <lynA
+[NeMo I 2024-06-03 04:59:40 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:40 wer:330] reference:mnEt AlslTAt AlmHlyp nAyt$r kAmyrwn mn Eqd lqA'At mE AlmjtmEAt AlmHlyp fy mnTqp AlAmtyAz
+[NeMo I 2024-06-03 04:59:40 wer:331] predicted:mnEt AlslTAt AlmHlyp nyt$r kAmyrAn mn Eqd lqA'At mE AlmjtmEAt AlmHlyp fy mnTqp AlAmtyAz
+[NeMo I 2024-06-03 04:59:41 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:41 wer:330] reference:wElY Alrgm mn AlAHtjAj AlSArx fy >wAxr EAm >lfyn wvlAvp E$r >qdm Alr}ys bwl byA
+[NeMo I 2024-06-03 04:59:41 wer:331] predicted:wElY Alrgm mn AlAHtjAj AlSArx fy >wAxr EAm >xdm Alr}ys bwl by
+[NeMo I 2024-06-03 04:59:41 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:41 wer:330] reference:fy Hyn tlqY Almstvmrwn fy Al$rkp SfEp btxfyD msAHp Al>rADy
+[NeMo I 2024-06-03 04:59:41 wer:331] predicted:fy Hyn tlqY Almstvmrwn fy Al$rkp SfEp btxfyD msAHp Al>rADy
+[NeMo I 2024-06-03 04:59:41 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:41 wer:330] reference:>yA kAnt AltwqEAt Alty sAdt *At ywm hnAk bAlnsbp llwZA}f wAlmdArs wAlmnAzl
+[NeMo I 2024-06-03 04:59:41 wer:331] predicted:>yA kAnt AltwqEAt Alty sAdt *At ywm hnAk bAlnsbp llwZA}f wAlmdArs wAlmnAzl
+[NeMo I 2024-06-03 04:59:42 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:42 wer:330] reference:ystfyd SgAr Almntjyn Al|n mn AlsyAsp Aljdydp AlmErwfp bAsm Al<strAtyjyp AlwTnyp lzyt Alnxyl
+[NeMo I 2024-06-03 04:59:42 wer:331] predicted:ystfyd SgAr Almntjyn Al|n mn AlsyAsp Aljdydp AlmErwfp bAsm Al<strAtyjyp AlwTnyp lzyt Alnxyl
+[NeMo I 2024-06-03 04:59:42 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:42 wer:330] reference:hnAk nwE mn AlEml yjry HAlyA
+[NeMo I 2024-06-03 04:59:42 wer:331] predicted:hnAk nwE mn AlEml yjry HAlyA
+[NeMo I 2024-06-03 04:59:43 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:43 wer:330] reference:wbmjrd >n yrtfE Alzyt ydxl fy mSfAp vm ystqr dAxl brAd mwjwd fy Al>sfl hnAk
+[NeMo I 2024-06-03 04:59:43 wer:331] predicted:mjrd >n yrtfE Alzyt ydxl fy msbAt vm ystqr dAxl brAd mwjwd fy Al>sfn hnAk
+[NeMo I 2024-06-03 04:59:43 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:43 wer:330] reference:Almstqbl bAlnsbp ly hw >nnA <n knA nryd >n nkwn AqtSAdA nA$}A mn xlAl AlzrAEp fh*h Al$rkAt yjb >n twjd
+[NeMo I 2024-06-03 04:59:43 wer:331] predicted:Almstqbl bAlnsbp ly hw >nnA <n knA nryd >n nkwn AqtSAdA nA$}A mn xlAl AlzrAEp fh*h Al$rkAt yjb >n twjd
+[NeMo I 2024-06-03 04:59:43 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:43 wer:330] reference:xlAl AlSrAE Almstmr ElY AlslTp
+[NeMo I 2024-06-03 04:59:43 wer:331] predicted:xlAl AlSrAE Almstmr ElY AlslTp
+[NeMo I 2024-06-03 04:59:43 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:43 wer:330] reference:EAdt >HdAv AlEnf Aldmwyp fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:43 wer:331] predicted:>EAdt >HdAv AlEnf Aldmwyp fy jnwb AlswdAn f
+[NeMo I 2024-06-03 04:59:44 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:44 wer:330] reference:jmEt Alljnp mElwmAthA wAl>dlp mn AlmydAn Hyv zAr >EDA&hA
+[NeMo I 2024-06-03 04:59:44 wer:331] predicted:jmEt Alljnp mElwmAthA wAl>dlp mn AlmydAn Hyv zAr >EDA&hA
+[NeMo I 2024-06-03 04:59:44 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:44 wer:330] reference:lmHAsbp Alms&wlyn En *lk mn* AndlAE AlnzAE nhAyp EAm >lfyn wvlAvp E$r
+[NeMo I 2024-06-03 04:59:44 wer:331] predicted:lmHAsbp Alms&wlyn En *lk mn* AndlAE AlnzAE nhAyp EAm
+[NeMo I 2024-06-03 04:59:44 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:44 wer:330] reference:Tylp snwAt AlHrb byn Al$mAl AlswdAny wjnwbh
+[NeMo I 2024-06-03 04:59:44 wer:331] predicted:Tylp snwAt AlHrb byn $mAl AlswdAn wjnwbh
+[NeMo I 2024-06-03 04:59:44 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:44 wer:330] reference:dwn >n yjd *lk >*nA SAgyp lkn HqA}q mA jrY wyjry fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:44 wer:331] predicted:dwn >n yjd *lk >dnA SAgyp lkn HqA}q mA jrY wyjry fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:45 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:45 wer:330] reference:fy >wAxr >lfyn wvlAvp E$r Astmrt mn* *lk AlHyn
+[NeMo I 2024-06-03 04:59:45 wer:331] predicted:> fy >wAxr Astmrt mn* *lk AlHyn
+[NeMo I 2024-06-03 04:59:45 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:45 wer:330] reference:dAxl AlHzb AlHAkm wAlHrkp Al$Ebyp ltHryr AlswdAn
+[NeMo I 2024-06-03 04:59:45 wer:331] predicted:dAxl AlHzb AlHAkm AlHrkp Al$Ebyp ltHryr AlswdAn
+[NeMo I 2024-06-03 04:59:45 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:45 wer:330] reference:mA t>vyr <qHAm AlqbA}l fy h*A AlSrAE
+[NeMo I 2024-06-03 04:59:45 wer:331] predicted:t>vyr <qHAm AlqbA}l fy h*A AlSrAE A
+[NeMo I 2024-06-03 04:59:46 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:46 wer:330] reference:bl ElY >sAs Alm$Arkp Alqblyp h*A mA >ss yEny yEny >jj AlSrAE
+[NeMo I 2024-06-03 04:59:46 wer:331] predicted:bl ElY >sAs Alm$Arkp Alqblyp h*A m >ss y n yEny >ntj AlSrAE
+[NeMo I 2024-06-03 04:59:46 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:46 wer:330] reference:mn jy$ yEny yEny kAnt yEny jy$ mtHr mtmrd
+[NeMo I 2024-06-03 04:59:46 wer:331] predicted:mn jy$ yEny kAn yEny jy$ mtmrdA
+[NeMo I 2024-06-03 04:59:46 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:46 wer:330] reference:>nA kmA *krt AlwH$yp yEny
+[NeMo I 2024-06-03 04:59:46 wer:331] predicted:>nA kmA *krt AlwH$yp yEny
+[NeMo I 2024-06-03 04:59:47 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:47 wer:330] reference:Al$Eb Aljnwby kAn yHArb AlnzAE fy AlxrTwm mn >jl AlAstqrAr fvqAfp AlqAnwn
+[NeMo I 2024-06-03 04:59:47 wer:331] predicted:Al$Eb Aljnwby kAn yHArb AlnZAm fy AlxrTwm mn >jl AlAstqrAr fvqAfp AlqAnwn
+[NeMo I 2024-06-03 04:59:47 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:47 wer:330] reference:<*A kAnt qwAt Al>mn nfshA mtwrTp fy mvl h*h h*h Al>HdAv
+[NeMo I 2024-06-03 04:59:47 wer:331] predicted:<*A kAnt qwAt Al>mn nfshA mtwrTp fy mvl h*h Al>HdAv
+[NeMo I 2024-06-03 04:59:47 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:47 wer:330] reference:>n nsbp >bnA' Alnwyr fy Aljy$ Al$Eby >SbH >kvr mn mn nsbp >bnA' AldynkA
+[NeMo I 2024-06-03 04:59:47 wer:331] predicted:>n nsbp >bnA' Alnwr fyhA jy$ $Eby >SbH >kvr mn nsbp >bnA' AldnkA
+[NeMo I 2024-06-03 04:59:48 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:48 wer:330] reference:kl h*h AlHrkAt ytm AstyEAbhA fy Aljy$ Al$Eby wh*A xlq fwDY kbyrp fy Aljy$ Al$Eby
+[NeMo I 2024-06-03 04:59:48 wer:331] predicted:kl h*h AlHrkAt ytm AstyEAbhA fy Aljy$ $Eby wh*A xlq fwDY kbyrA fy jy$ $Eby
+[NeMo I 2024-06-03 04:59:48 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:48 wer:330] reference:Als&Al hnA mA hw sbyl wqf h*h AlHrb Al>hlyp fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:48 wer:331] predicted:Als&Al hnA mA hw sbyl wqf h*h AlHrb Al>hlyp fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:48 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:48 wer:330] reference:qDyp AlqyAdp dAxl AlHzb AlHAkm wh*A hw Al*y xlq AlHrb fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:48 wer:331] predicted:qDyp AlqyAdp dAxl AlHzb AlHAkm wh*A hw Al*y xlq AlHrb fy jnwb AlswdAn
+[NeMo I 2024-06-03 04:59:48 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:48 wer:330] reference:wAl>TfAl fy mdynp bwr tm yEny <bAdp >kvr mn xmsp >lf $xS fy mdynp bwr fy wAHd wtsEyn
+[NeMo I 2024-06-03 04:59:48 wer:331] predicted:wAl>TfAl fy mdynp bwr tm yEny <bAdp >kvr mn >lf $xS fy mdynp bwr fy wAHd jzyn
+[NeMo I 2024-06-03 04:59:49 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:49 wer:330] reference:wyqwl b>n AlqDyp hy SrAE ElY AlslTp wmn vm tm <qHAm AlqbA}l
+[NeMo I 2024-06-03 04:59:49 wer:331] predicted:wyqwl b>n AlqDyp ysrE ElY AlslTp wmn vm tm <qHAm AlqbA}l
+[NeMo I 2024-06-03 04:59:49 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:49 wer:330] reference:fy jnwb AlswdAn wbyn Hkwmp AlswdAn kAnt ElY >ss
+[NeMo I 2024-06-03 04:59:49 wer:331] predicted:fy jnwb AlswdAn wbyn Hkwmp AlswdAn kAnt ElY >ss
+[NeMo I 2024-06-03 04:59:49 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:49 wer:330] reference:wsArt Al>mwr fy jw mn AlHryp wjw mn AldymqrATyp
+[NeMo I 2024-06-03 04:59:49 wer:331] predicted:wsArt Al>mwr fy jw mn AlHryp wjw mn AldymqrATyp
+[NeMo I 2024-06-03 04:59:50 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:50 wer:330] reference:SHyH hw lys jy$ fqT lldynkA wlkn AldynkA hm >kvr wjwdA fy Aljy$
+[NeMo I 2024-06-03 04:59:50 wer:331] predicted:SHyH hw lys jy$ fqT AldynkA wlkn AldynkA hm >kvr wjwdA fy Aljy$
+[NeMo I 2024-06-03 04:59:50 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:50 wer:330] reference:w>nh rbmA tm <qHAm AlqbA}l fy h*A AlSrAE
+[NeMo I 2024-06-03 04:59:50 wer:331] predicted:w>nh rbmA tm <qHAm AlqbA}l fy h*A AlSrAE
+[NeMo I 2024-06-03 04:59:50 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:50 wer:330] reference:wbAltAly fy AlAntxAbAt wfy AltElym wfy AlwZA}f wfy kl >nHA' Aldwlp
+[NeMo I 2024-06-03 04:59:50 wer:331] predicted:wbAltAly fy AlAntxAbAt wfy AltElym wfy AlwZA}f wfy kl >nHA' Aldwlp
+[NeMo I 2024-06-03 04:59:50 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:50 wer:330] reference:wfy sAHl AlEAj wfy syrAlywn >yDA wSl <lY drjp bEydp mn AlEnf
+[NeMo I 2024-06-03 04:59:50 wer:331] predicted:wfy sAHl AlEAj wfy syrAlywn >yDA wSl <lY drjp bEydp mn AlEnf
+[NeMo I 2024-06-03 04:59:51 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:51 wer:330] reference:hl ymkn AltEmym wAlqwl b>n AldfE nHw AnfSAl <qlym
+[NeMo I 2024-06-03 04:59:51 wer:331] predicted:hl ymkn AltEmym wAlqwl b>n AldfE nHw AnfSAl <qlym
+[NeMo I 2024-06-03 04:59:51 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:51 wer:330] reference:mjAzr wHSlt Enf vm HSlt Hrb Hqyqp >w Hrbyn Hqyqp
+[NeMo I 2024-06-03 04:59:51 wer:331] predicted:mjAzr wHSlt Enf vm HSlt Hrb Hqyqp >w Hrbyn Hqyqp
+[NeMo I 2024-06-03 04:59:51 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:51 wer:330] reference:wbAltAly bttSrf Dmn mjmwEp Al<yjAd
+[NeMo I 2024-06-03 04:59:51 wer:331] predicted:wbAltAly ttSrf Dmn mjmwEp Al<yjAd
+[NeMo I 2024-06-03 04:59:52 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:52 wer:330] reference:$krA lk dktwr AlTyb zyn AlEAbdyn >stA* AlElwm AlsyAsyp fy jAmEp AlxrTwm
+[NeMo I 2024-06-03 04:59:52 wer:331] predicted:$krA lk dktwr AlTyb zyn AlEAbdyn >stA* AlElwm AlsyAsyp fy jAmEp AlxrTwm
+[NeMo I 2024-06-03 04:59:52 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:52 wer:330] reference:>nh tEbyr En rDA AlmSryyn Enh wrgbthm fy >n lA ynAzEh wslTth AlbrlmAn
+[NeMo I 2024-06-03 04:59:52 wer:331] predicted:>nh tEbyr En rDA AlmSryyn Enh wrgbthm fy >n lA ynAzEh wslTth brlmAn
+[NeMo I 2024-06-03 04:59:52 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:52 wer:330] reference:ntAbE >wlA tqryr mrym >wbAyy$ vm nbd> AlnqA$
+[NeMo I 2024-06-03 04:59:52 wer:331] predicted:tAbE >wlA tqryr myn >wbAyy$ vm nbd> Alq
+[NeMo I 2024-06-03 04:59:52 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:52 wer:330] reference:sbEp wE$ryn fy AlmA}p >y >kvr mn sbEp mlAyyn Swt Edd AlnAxbyn Almsjlyn
+[NeMo I 2024-06-03 04:59:52 wer:331] predicted:sbEp wE$ryn fy Alm}p >y >kvr mn mlAyyn Swt Edd AlnAxbyn Almsjlyn
+[NeMo I 2024-06-03 04:59:53 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:53 wer:330] reference:AlDrbp AlmwjEp kAnt mn nSyb Hzb Alnwr Alslfy Al*y dEm AnqlAb Alsysy ElY Alr}ys mrsy
+[NeMo I 2024-06-03 04:59:53 wer:331] predicted:AlDrbp AlmwjEp kAnt mn nSyb Hzb Alnwr Alslfy Al*y dEm AnqlAb Alsysy ElY Alr}ys mrsy
+[NeMo I 2024-06-03 04:59:53 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:53 wer:330] reference:njl mst$Ar sAbq wEDw mjls <dArp nAdy AlzmAlk whw mHAmy
+[NeMo I 2024-06-03 04:59:53 wer:331] predicted:njl mst$Ar sAbq wEDw mjls <dArp nAdy AlzmAlk whw mHAmy
+[NeMo I 2024-06-03 04:59:53 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:53 wer:330] reference:mSr mA bEd vwrp ynAyr >ryd lhA >n lA ttEAfY mn AlfsAd wAlqmE wAlAEtqAlAt AltEsfyp
+[NeMo I 2024-06-03 04:59:53 wer:331] predicted:mSr mA bEd vwrp ynAyr >ryd lhA >n lA ttEAfY mn AlfsAd wAlqmE wAlAEtqAlAt AltEsfyp
+[NeMo I 2024-06-03 04:59:54 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:54 wer:330] reference:AlAntxAbAt Al>xyrp fy ElY Al>ql fy jwlthA Al>wlY
+[NeMo I 2024-06-03 04:59:54 wer:331] predicted:AlAntxAbAt Al>xyrp ElY Al>ql fy jwlthA Al>wlY
+[NeMo I 2024-06-03 04:59:54 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:54 wer:330] reference:mmkn tkwn xmsyn fy Almyp mmkn tkwn xmsp wxmsyn fy Almyp fAl$Eb AlmSry dxl mrHlp
+[NeMo I 2024-06-03 04:59:54 wer:331] predicted:mmkn tkwn mmkn tkwn fAl$Eb AlmSry dxl mrHlp
+[NeMo I 2024-06-03 04:59:54 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:54 wer:330] reference:Al>mr AlvAlv >n yEny AlnAs kAnt m$ mtHmsp <lY Hd mA qAlt
+[NeMo I 2024-06-03 04:59:54 wer:331] predicted:Al>mr AlvAlv >n yEny AlnAs kAnt m$ mtHmsp <lY Hd mA qAlt
+[NeMo I 2024-06-03 04:59:55 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:55 wer:330] reference:yEny m&$rA ElY trAjE fy AlHryAt fy mSr wElY AlAftqAd <lY AltEddyp AlsyAsyp
+[NeMo I 2024-06-03 04:59:55 wer:331] predicted:yEny m&$rA ElY trAjE fy AlHryAt fy mSr wElY AlAftqAd <lY AltEddyp AlsyAsyp
+[NeMo I 2024-06-03 04:59:55 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:55 wer:330] reference:fy tqlyl Edd mn yr$HwA >nfshm bsbb wjwd nZAm AlqwA}m
+[NeMo I 2024-06-03 04:59:55 wer:331] predicted:tqlyl Edd mn yr$HwA ElY >nfshm bsbb wjwd nZAm AlqwA}m
+[NeMo I 2024-06-03 04:59:55 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:55 wer:330] reference:l>n nsbp Ally HtY nzlwA fy AltSwyt wjd >nh >kvr mn tmAnyn fy Almyp tEdwA sn AlwAHd wstyn
+[NeMo I 2024-06-03 04:59:55 wer:331] predicted:l>n nsbp HtY yEny nzlwA fy AltSwyt wjd >n >kvr mn tEdwA sn A
+[NeMo I 2024-06-03 04:59:56 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:56 wer:330] reference:HynmA ykwn hnAk mnAx syAsy slym whw mA Hdv bEd vwrp xmsp wE$ryn ynAyr >lfyn w<HdA$r
+[NeMo I 2024-06-03 04:59:56 wer:331] predicted:HynmA ykwn hnAk mnAx syAsy slym whw mA Hdv bEd vwrp ynAyr
+[NeMo I 2024-06-03 04:59:56 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:56 wer:330] reference:bAnthA' Al$Ebyp AlzA}fp AlmSnwEp mn Al<ElAm Almwjh mn Al$&wn AlmEnwyp AlEskryp
+[NeMo I 2024-06-03 04:59:56 wer:331] predicted:bAnthA' Al$Ebyp AlzA}fp AlmSnwEp mn Al<ElAm Almwjh mn Al$&wn AlmEnwyp AlEskryp
+[NeMo I 2024-06-03 04:59:56 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:56 wer:330] reference:nEm h*A klAm fArg TbEA bsm Allh AlrHmn AlrHym >nA >ryd >n >qwl >wlA tHyp ll$Eb AlmSry Al*y wjh >kbr lTmp
+[NeMo I 2024-06-03 04:59:56 wer:331] predicted:nEm h*A klAm fArg TbEA bsm Allh AlrHmn AlrHym >nA >ryd >n >qwl >wlA tHyp ll$Eb AlmSry Al*y ywjh >kbr lqmp
+[NeMo I 2024-06-03 04:59:57 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:57 wer:330] reference:lA ynbgy >n ystmr w>nh qd f$l fy kl AlmjAlAt fy r>yy >n hnAk rsA}l >rAd >n yrslhA Al$Eb AlmSry
+[NeMo I 2024-06-03 04:59:57 wer:331] predicted:lA ynbgy >n ystmr w>nh qd f$l fy kl AlmjAlAt fy r>yy >n hnAk rsA}l ElY ElY msyY ll$Eb AlmSry
+[NeMo I 2024-06-03 04:59:57 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:57 wer:330] reference:>w fy Alsjwn bAltE*yb >w yqtl fy AljAmEAt >w ylqY mn AlblkwnAt fy Al>dwAr AlElyA fy Alfywm wfy bny swyf wfy Al<skndryp
+[NeMo I 2024-06-03 04:59:57 wer:331] predicted:fy Alsjwn bAltE*yb >w yqtl fy AljAmEAt >w ylqY mn AlblwnAt fy Al>dwAr AlElyA fy Alfywm wfy blswyf wfy Al<skndryp
+[NeMo I 2024-06-03 04:59:57 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:57 wer:330] reference:r>yy >n nsbp AlEzwf hy myp wE$ryn fy Almyp kyf tkwn myp wE$ryn fy Almyp
+[NeMo I 2024-06-03 04:59:57 wer:331] predicted:r>yy >n nsbp AlEzwf hy kyf tkwn A
+[NeMo I 2024-06-03 04:59:58 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:58 wer:330] reference:nsbp tmvl nsbp kbyrp tmvl AlkbAr fy Alsn wAlnsA' w>yDA mA smAh
+[NeMo I 2024-06-03 04:59:58 wer:331] predicted:nsbp kbyrp tmvl AlkbAr fy Alsn wAlnsA' w>yDA mA smAh
+[NeMo I 2024-06-03 04:59:58 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:58 wer:330] reference:ElY >dA' dwrh Ally AlmfrwD AlbrlmAnAt bt>dyh Aldwr Ally bt>dyh fy >y mjtmE mtqdm
+[NeMo I 2024-06-03 04:59:58 wer:331] predicted:ElY >dA' dwrh Al AlmfrwD AlbrlmAnAt t&dyh Aldwr Ally t&dyh fy >y mjtmE mtqdm
+[NeMo I 2024-06-03 04:59:59 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:59 wer:330] reference:>n qlp nsbp AltSwyt bt$yr <lY >n HtY AlnZAm fqd kfA'th
+[NeMo I 2024-06-03 04:59:59 wer:331] predicted:<n qlt nsbp AltSwyt t$yr >n HtY AlnZAm fqT kfA'th
+[NeMo I 2024-06-03 04:59:59 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:59 wer:330] reference:AlnZAm bytrnH mA >x$Ah >n AlTAqp Alslbyp Ally Al$Eb Ebr EnhA
+[NeMo I 2024-06-03 04:59:59 wer:331] predicted:AlnZAm ytrnH mA >x$Ah >n AlTAqp Alslbyp Ally Al$Eb Ebr EnhA
+[NeMo I 2024-06-03 04:59:59 wer:329] 
+    
+[NeMo I 2024-06-03 04:59:59 wer:330] reference:AlnZAm TbEA ms&wl EnhA lkn fy ms&wlyp kbyrp jdA ElY qwY AlmEArDp wtftthA
+[NeMo I 2024-06-03 04:59:59 wer:331] predicted:AlnZAm TbEA ms&wl EnhA lkn fy ms&wlyp kbyrp jdA ElY qwY AlmEArDp wtftthA
+[NeMo I 2024-06-03 05:00:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:00 wer:330] reference:>y brlmAn HynAq$ AlbrAmj AlHkwmyp yEny kwnk <nk >nt fy Hzb
+[NeMo I 2024-06-03 05:00:00 wer:331] predicted:>y brlmAn s ynAq$ AlbrAmj AlHkwmyp yEny qwl lk <nk >nt fy Hzb
+[NeMo I 2024-06-03 05:00:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:00 wer:330] reference:HtjElhm m&ydyn l>y fkrp <SlAH lmHArbp >y $xS fAsd
+[NeMo I 2024-06-03 05:00:00 wer:331] predicted:yjElhm m&ydyn l>y fkrp <SlAH lmHArbp >y $xS fAsd
+[NeMo I 2024-06-03 05:00:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:00 wer:330] reference:jdwl >EmAlhA Hy$kl Hsb brnAmj AlHkwmp lmA r}ys AlwzArp ytwjh wyEln
+[NeMo I 2024-06-03 05:00:00 wer:331] predicted:jdwY >EmAlh sy$kl Hsb brnAmj AlHkwmp lmA r}ys AlwzrA' ytwjh wyEln
+[NeMo I 2024-06-03 05:00:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:01 wer:330] reference:fy qbl >yAm Almlkyp dy EA}lAt kbyrp dy yEny Alnfw* AlEA}ly fy mqATEAt wmdn wqrY
+[NeMo I 2024-06-03 05:00:01 wer:331] predicted:fy qbl >yAm Almlkyp dy EA}lAt kbyrp hdh yEny Alnfw* AlEA}ly fy mqATEAt wmdn qrY
+[NeMo I 2024-06-03 05:00:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:01 wer:330] reference:Alnfsy ldY AlmwATn AlmSry wmA EAd qAdrA rbmA <lY mwAjhp
+[NeMo I 2024-06-03 05:00:01 wer:331] predicted:Alnfsy ldY AlmwATn AlmSry wmA EAd qAdrA rbmA <lY mwAjhp
+[NeMo I 2024-06-03 05:00:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:02 wer:330] reference:tdny nsbp Alm$Arkp b$kl kbyr fy h*h AlmrHlp hw Edm m$Arkp AltyAr Al<slAmy Al*y kAn y$Ark bnsb >ElY fy AlAntxAbAt AlmADyp
+[NeMo I 2024-06-03 05:00:02 wer:331] predicted:tdny yvbt Alm$Arkp b$kl kbyr fy h*h AlmrHlp hw Edm m$k tr Al<slAmy Al*y kAn y$Ark bnsb >ElY fyh AlAntxAbAt AlmADyp
+[NeMo I 2024-06-03 05:00:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:02 wer:330] reference:dktwr vrwt nAfE rmwz tmvl vwrp xmsyn xmsp wE$ryn
+[NeMo I 2024-06-03 05:00:02 wer:331] predicted:dktwr vrwt nAfE rmwz tmvl vwrp w
+[NeMo I 2024-06-03 05:00:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:02 wer:330] reference:yEny mn mn >HDrhm AHmd Ez wmn >Sr Elyhm >Hmd Ez fy dxwl AlAntxAbAt fy >lfyn wE$rp
+[NeMo I 2024-06-03 05:00:02 wer:331] predicted:yEny mn >HDrhm >Hmd Ez wmn >Sr Elyhm >Hmd Ez fy dxwl AlAntxAbAt fy
+[NeMo I 2024-06-03 05:00:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:03 wer:330] reference:bttSArE fy kyfyp twsyE SlAHyAt Alsysy wk>n Alsysy systmr <lY Al>bd
+[NeMo I 2024-06-03 05:00:03 wer:331] predicted:ttSArE fy kyfyp twsyE SlAHyAt Alsysy wk>n Alsysy systmr <lY Al>bd
+[NeMo I 2024-06-03 05:00:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:03 wer:330] reference:>w ykwn lh Alqdrp ElY mjAbhp Alr}ys wfrD AlrqAbp
+[NeMo I 2024-06-03 05:00:03 wer:331] predicted:>w ykwn lh Alqdrp ElY mjAbhp Alr}ys wfrD AlrqAbp
+[NeMo I 2024-06-03 05:00:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:03 wer:330] reference:lAbd >n ykwn hnAk brlmAnA wlw $klyA kmA kAn yHdv mE |l mbArk wbrlmAnAt AlEskr klhA
+[NeMo I 2024-06-03 05:00:03 wer:331] predicted:lA bd >n ykwn hnAk brlmAnA wlw $klyA kmA kAn yHdv mE |lp mbArk wbrlmAnAt AlEskr klh
+[NeMo I 2024-06-03 05:00:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:04 wer:330] reference:>ywh tHt >mrk Algrb yEny ll>sf mwqfh yEny mxzy
+[NeMo I 2024-06-03 05:00:04 wer:331] predicted:hw tHt >mrk Algrb yEny ll>sf mwqfh yEny mxzy
+[NeMo I 2024-06-03 05:00:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:04 wer:330] reference:AlHfAZ ElY AlslAm mE <srA}yl Alm$Arkp fy AlHrb ElY Al<rhAb
+[NeMo I 2024-06-03 05:00:04 wer:331] predicted:AlHfAZ ElY AlslAm mE <srA}yl Alm$Arkp fy AlHrb ElY Al<rhAb
+[NeMo I 2024-06-03 05:00:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:04 wer:330] reference:Aldwlyp Ally fyhA t$AbkAt mSAlH wt$AbkAt fy ElAqAt mA byn Aldwl
+[NeMo I 2024-06-03 05:00:04 wer:331] predicted:Aldwlyp Ally fyhA t$AbkAt mSAlH wt$AbkAt fy ElAqAt mA byn Aldwl
+[NeMo I 2024-06-03 05:00:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:05 wer:330] reference:ElY >nh ykwn fElA Endh AlHl wbAlmnAsbp m$ bs AlnZAm HtY Al<slAmyyn mE AHtrAmy lkl Al>xwp Almwjwdyn
+[NeMo I 2024-06-03 05:00:05 wer:331] predicted:ElY >nh ykwn fElA Endh AlHl wbAlmnAsbp m$ bs AlnZAm HtY Al<slAmyyn mE AHtrAmy lkl Al<xwp Ally mwjwdyn
+[NeMo I 2024-06-03 05:00:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:05 wer:330] reference:tEbnA mn AlxnAqp dy AlxnAqp dy htdmr Albld wlw mA fqnA$
+[NeMo I 2024-06-03 05:00:05 wer:331] predicted:fy EdnA mn AlxnAqp hdh AlxnAqp dh dmr Albld wlw mA fwqnA
+[NeMo I 2024-06-03 05:00:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:05 wer:330] reference:mqArbp >xrY jdydp tEyd AlAstqrAr AlsyAsy <lY AlblAd
+[NeMo I 2024-06-03 05:00:05 wer:331] predicted:mqArbp >xrY jdydp tEyd AlAstqrAr AlsyAsy <lY AlblAd
+[NeMo I 2024-06-03 05:00:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:06 wer:330] reference:lyh >ntm Ezftm En AlHDwr lSnAdyq AlAntxAbAt yEny <zAy ySwr Eml slby ElY >nh Eml <yjAby
+[NeMo I 2024-06-03 05:00:06 wer:331] predicted:ly >ntm Ezftm En AlHDwr lSnAdyq AlAntxAbAt yEny <*A ySwr Eml slby ElY >nh Eml <yjAby
+[NeMo I 2024-06-03 05:00:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:06 wer:330] reference:wtsEY Alr}Asp AljhAz Altnfy*y llHkm fy AltEAml mE >y >frAd y>twn kmmvlyn ll$Eb
+[NeMo I 2024-06-03 05:00:06 wer:331] predicted:hw tsEY r}Asp AljhAz Altnfy*y llHkm fy AltEAml mE >y >frAd y>twn kmmvlyn ll$Eb
+[NeMo I 2024-06-03 05:00:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:07 wer:330] reference:ms>lp Drwrp <yjAd fkr jdyd wbHv ms>lp hyklyp Aldwlp h*h Alm$klp
+[NeMo I 2024-06-03 05:00:07 wer:331] predicted:ms>lp Drwrp <yjAd fkr jdyd wyEny bHv y ms>lp hyklyp Aldwlp h*h Alm$klp
+[NeMo I 2024-06-03 05:00:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:07 wer:330] reference:>n gAlbyp AlmEtqlyn Al|n fy Alsjwn hm $bAb lA <slAmy wlA msys
+[NeMo I 2024-06-03 05:00:07 wer:331] predicted:>n gAlbyp AlmEtqlyn Al|n fy Alsjwn hm $bAb lA <slAmy wlA msys
+[NeMo I 2024-06-03 05:00:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:07 wer:330] reference:lw njHnA fy AlAstjAbp lTmwH Al$Eb AlmSry Al*y Zhr fy h*A AlEzwf $bh AlkAml
+[NeMo I 2024-06-03 05:00:07 wer:331] predicted:lw njHnA fy AlAstjAbp lTmwH Al$Eb AlmSry l Zhr fy h*A Alnzwf $bh AlkAml
+[NeMo I 2024-06-03 05:00:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:08 wer:330] reference:kyf ymkn >n tkwn dktwr EwAqb AlAstmrAr fy h*A AlmsAr
+[NeMo I 2024-06-03 05:00:08 wer:331] predicted:kyf ymkn >n tkwn dktwr EwAqb AlAstmrAr fy h*A AlmsAr
+[NeMo I 2024-06-03 05:00:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:08 wer:330] reference:tSbH mtdnyp jdA wtsmY AltSwyt AlEqAby Al<yjAby nEm
+[NeMo I 2024-06-03 05:00:08 wer:331] predicted:tSbH mtdnyp jdA wtsmY AltSwyt AlEqAby Al<yjAby
+[NeMo I 2024-06-03 05:00:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:08 wer:330] reference:syqtrb mn AltlAtA$r >rbEtA$r jnyh fy EAm >lfyn wstA$r <*A Astmr AlHAl ElY mA hw Elyh
+[NeMo I 2024-06-03 05:00:08 wer:331] predicted:syqtrb mn jnyh fy EAm <*A Astmr AlHAl ElY mA hw Elyh
+[NeMo I 2024-06-03 05:00:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:09 wer:330] reference:Alty yEny ynqD ElyhA AlEskr wAldw wAldwlp AlEmyqp wAlty st&dy bAlblAd
+[NeMo I 2024-06-03 05:00:09 wer:331] predicted:Alty yEny ynqD ElyhA AlEskr wAldwlp AlEmyqp wAlty st&dy bAlblAd
+[NeMo I 2024-06-03 05:00:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:09 wer:330] reference:wmA yqwd <lyh AlblAd fryq AlEskr Al|n dktwr nbyl myxA}yl fy Zl Hdyv
+[NeMo I 2024-06-03 05:00:09 wer:331] predicted:wmA yqwd <lyh AlblAd fryq AlEskr Al|n dktwr nbyl myxA}yl fy Zl Hdyv
+[NeMo I 2024-06-03 05:00:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:09 wer:330] reference:>rjwk mA tthmny$ <ny bgyr AlHdyv Al>mwr dy btjry fy mSr
+[NeMo I 2024-06-03 05:00:09 wer:331] predicted:>rjwk mA tthmny <n bgyr AlHdyv Al>mwr dh tjrf fy mSr
+[NeMo I 2024-06-03 05:00:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:10 wer:330] reference:nEm nEm yEny >nt *hbt bEydA fy AltHlyl dktwr nEm >ryd fqT fy Aldqyqp Al>xyrp >fsH AlmjAl lldktwr >Hmd
+[NeMo I 2024-06-03 05:00:10 wer:331] predicted:En n Dmyn n yEny >nt *hbt bEydA fy AltHlyl dktwr nEm >ryd fqT fy Aldqyqp Al>xyrp >ftH AlmjAl lldktwr >Hmd
+[NeMo I 2024-06-03 05:00:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:10 wer:330] reference:Twl mA AlqwY AlsyAsyp mfttp wgyr qAdrp ElY AlHwAr
+[NeMo I 2024-06-03 05:00:10 wer:331] predicted:Twl mn AlqwY AlsyAsyp mfttp wgyr qAdrp ElY AlHwAr
+[NeMo I 2024-06-03 05:00:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:10 wer:330] reference:mn brlyn $krA jzylA lk n$kr >yDA Aldktwr vrwt nAfE mn twrntw fy kndA whw EDw
+[NeMo I 2024-06-03 05:00:10 wer:331] predicted:>n A mn b y $krA jzylA lk n$kr >yDA Aldktwr vrwt nAfE mn twrwntw fy kndA whw EDw
+[NeMo I 2024-06-03 05:00:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:11 wer:330] reference:w*lk bsbb kl AltwqEAt Alty kAnt t$yr <lY >n Hzb AlEdAlp wAltnmyp
+[NeMo I 2024-06-03 05:00:11 wer:331] predicted:w*lk bsbb kl AltwqEAt Alty kAnt t$yr <lY >n Hzb AlEdAlp wAltnmyp
+[NeMo I 2024-06-03 05:00:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:11 wer:330] reference:mE >Hd SnAE AlsyAsp fy trkyA Aldktwr <brAhym kAlyn
+[NeMo I 2024-06-03 05:00:11 wer:331] predicted:mE >Hd SnAE AlsyAsp fy trkyA Aldktwr <brAhym kAln
+[NeMo I 2024-06-03 05:00:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:11 wer:330] reference:<n ntA}j AntxAbAt Al>wl mn nwfmbr kAnt mfAj}p llbED lkn
+[NeMo I 2024-06-03 05:00:11 wer:331] predicted:wmn ntA}j AntxAbAt Al>wl mn nwfmbr kAnt mfAj}p llbED lkn
+[NeMo I 2024-06-03 05:00:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:12 wer:330] reference:rHlp bHv fy *AtnA lmA*A HSl *lk wlmA*A HSl mA HSl lnA
+[NeMo I 2024-06-03 05:00:12 wer:331] predicted:rHlp bHv fy *AtnA lmA*A HSl *lk wlmA*A HSl mA HSl lnA
+[NeMo I 2024-06-03 05:00:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:12 wer:330] reference:fy bED AlbldAn ynjH wfy bED AlbldAn lA ynjH wAl>mr yEtmd ElY Alhyklyp AlsyAsyp wAlZrwf
+[NeMo I 2024-06-03 05:00:12 wer:331] predicted:fy bED AlbldAn ynjH fy AlbED Al|xr lA ynjH wAl>mr yEtmd ElY Alhyklyp AlsyAsyp wZrwf
+[NeMo I 2024-06-03 05:00:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:12 wer:330] reference:bAtxA* mwqf wADH fh*h
+[NeMo I 2024-06-03 05:00:12 wer:331] predicted:bAtxA* mwqf wADH fh*h A
+[NeMo I 2024-06-03 05:00:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:13 wer:330] reference:fhmnA AlrsAlp wElynA >n nrAjE bED syAsAtnA wqd fEl *lk
+[NeMo I 2024-06-03 05:00:13 wer:331] predicted:fhmnA AlrsAlp wElynA >n nrAjE bED syAsAtnA wqd fEl *lk
+[NeMo I 2024-06-03 05:00:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:13 wer:330] reference:mA hy AltEdylAt bAxtSAr mA hy AltEdylAt Alty yrydhA Alr}ys >rdwgAn fy Aldstwr Altrky
+[NeMo I 2024-06-03 05:00:13 wer:331] predicted:mA hy AltEdylAt bAxtSAr mA hy AltEdylAt Alty yrydhA Alr}ys >rdwgAn fy Aldstwr Altrky
+[NeMo I 2024-06-03 05:00:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:13 wer:330] reference:tEzzt qwtnA AlAqtSAdyp wxASp fy AlE$r snwAt AlmADyp >SbHt trkyA
+[NeMo I 2024-06-03 05:00:13 wer:331] predicted:tEzzt qwtnA AlAqtSAdyp wxASp fy AlE$r snwAt AlmADyp >SbHt trkyA
+[NeMo I 2024-06-03 05:00:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:14 wer:330] reference:shlA mmtnEA yqtSr ElY hykl AlHkwmp wElY AlHryAt wAlHqwq Al>sAsyp wmA <lY *lk
+[NeMo I 2024-06-03 05:00:14 wer:331] predicted:shlA mmtnEA yqtSr ElY hykl AlHkwmp wElY AlHryAt wAlHqwq Al>sAsyp wmA <lY *lk
+[NeMo I 2024-06-03 05:00:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:14 wer:330] reference:<lY stp wstyn fy AlmA}p mn mHtwY Aldstwr whnAk xlAfAt tbqY HtY Al|n qA}mp vm Al
+[NeMo I 2024-06-03 05:00:14 wer:331] predicted:tsmy p mn mHtwY Aldstwr whnAk xlAfAt tbqY HtY Al|n qA}mp vm
+[NeMo I 2024-06-03 05:00:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:14 wer:330] reference:swf tktbh Al>HzAb AlsyAsyp vm yErD ElY Al$Eb hl syrDY bh >m lA wh*A Aldstwr systnd
+[NeMo I 2024-06-03 05:00:14 wer:331] predicted:swf tktb Al>HzAb AlsyAsyp vm yErD ElY Al$Eb hl syrDY bh >m lA wh*A Aldstwr systnd
+[NeMo I 2024-06-03 05:00:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:15 wer:330] reference:Aldstwr AlHAly brlmAny hl Aldstwr Aljdyd sykwn r}Asy
+[NeMo I 2024-06-03 05:00:15 wer:331] predicted:Aldstwr AlHAly brlmAny hl Aldstwr Aljdyd sykwn r}AsyA
+[NeMo I 2024-06-03 05:00:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:15 wer:330] reference:nAjHp jdA mA hw Al>fDl ll$Eb Altrky kxSwSyp ll>trAk hl AlnZAm AlbrlmAny hw Al>fDl ll>trAk Al|n >m AlnZAm Alr}Asy
+[NeMo I 2024-06-03 05:00:15 wer:331] predicted:nAjHp hw >fDl ll$Eb Altrky kxSwSyp ll>trAk hl AlnZAm AlbrlmAny hw Al>fDl ll>trAk Al|n >m AlnZAm Alr}Asy
+[NeMo I 2024-06-03 05:00:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:16 wer:330] reference:ldynA EwAml Hrkyp dynAmykyp syAsyp wAqtSAdyp wAjtmAEyp mxtlfp
+[NeMo I 2024-06-03 05:00:16 wer:331] predicted:ldynA EwAml Hrkyp dynAmykyp syAsyp wAqtSAdyp wAjtmAEyp mxtlfp
+[NeMo I 2024-06-03 05:00:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:16 wer:330] reference:Hzb AlEdAlp wAltnmyp lm yHSl <lA ElY tltmyp wxmstA$r yEny >ntm bHAjp <lY xmstA$r EDw tqrybA <DAfy
+[NeMo I 2024-06-03 05:00:16 wer:331] predicted:>n Hzb AlEdAlp wAltnmyp lm yHSl <lA ElY v yEny >ntm bHAjp <lY EDw tqrybA <DAfy
+[NeMo I 2024-06-03 05:00:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:16 wer:330] reference:<*A lw >n HzbA mA >w >HzAbA >xrY dEmt fkrp mA sykwn hnAk Edd kAfy ydEmhA
+[NeMo I 2024-06-03 05:00:16 wer:331] predicted:>n HzbA mA w>HzAbA >xrY dEmt fkrp mA sykwn hnAk Edd kAfy ydEmhA
+[NeMo I 2024-06-03 05:00:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:17 wer:330] reference:fy nqAT tjAh AlqDyp Alswryp lA symA >n rwsyA w<yrAn >SbHtA AllAEb Alr}ysy Al|n fy swryA
+[NeMo I 2024-06-03 05:00:17 wer:331] predicted:fy nqAT tjAh AlqDyp Alswryp lAsymA w>n rwsyA w<yrAn >SbHtA AllAEb Alr}ys Al|n fy swryA
+[NeMo I 2024-06-03 05:00:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:17 wer:330] reference:wtstjyb lmTAlbhm Al$rEyp nHn lA ntHdv En mnZmAt sryp wmnZmAt gyr qAnwnyp
+[NeMo I 2024-06-03 05:00:17 wer:331] predicted:wtstjyb lmTAlbhm Al$rEyp nHn lA ntHdv h A En mnZmAt sryp wmnZmAt gyr qAnwnyp
+[NeMo I 2024-06-03 05:00:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:17 wer:330] reference:jrbnA AlHlwl AldblwmAsyp lmdp tsEp >$hr wl>nh lm ykn
+[NeMo I 2024-06-03 05:00:17 wer:331] predicted:jrbnA AlHlwl AldblwmAsyp lmdp >$hr wl>nh lm ykn
+[NeMo I 2024-06-03 05:00:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:18 wer:330] reference:<yrAn mwjwdp kmHtl >yDA fy swryA whm ElY >bwAbkm >ntm Al>trAk mA*A stfElwn Al|n
+[NeMo I 2024-06-03 05:00:18 wer:331] predicted:<yrAn mwjwdp kmHtl >yDA fy swryA whm ElY >bwAbkm >ntm Al>trAk mA*A stfElwn Al|n
+[NeMo I 2024-06-03 05:00:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:18 wer:330] reference:Hkwmp >w jhAz Hkm AntqAly ytbE AlHkwmp wAlmEArDp
+[NeMo I 2024-06-03 05:00:18 wer:331] predicted:>n Hkwmp AljhAd Hkm AntqAly yjmE AlHkwmp wAlmEArDp
+[NeMo I 2024-06-03 05:00:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:18 wer:330] reference:Al*y >EAd swryA <lY mA qbl AlESr AlHjry mn >jl >n yrHl Al>sd
+[NeMo I 2024-06-03 05:00:18 wer:331] predicted:Al*y >EAd swryA <lY mA qbl AlESr AlHjry mn >jl >n yrHl Al>sd
+[NeMo I 2024-06-03 05:00:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:19 wer:330] reference:fy mSr njH Al$Eb AlmSry fy <sqAT nZAm mbArk lkn bqy nZAmh w>f$l Alvwrp Al|n Alkl ytHdv En rHyl Al>sd
+[NeMo I 2024-06-03 05:00:19 wer:331] predicted:fy mSr njH Al$Eb AlmSry fy <sqAT mbArk lkn bqy nZAmh w>f$l Alvwrp Al|n Alkl ytHdv En rHyl Al>sd
+[NeMo I 2024-06-03 05:00:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:19 wer:330] reference:yjb >n tSbH swryA bldA dymqrATyA yHkm bHkm AlqAnwn vAlvA kl f}At Al$Eb
+[NeMo I 2024-06-03 05:00:19 wer:331] predicted:yjb >n tSbH swryA bldA dymqrATyA yHkm bHkm AlqAnwn vAlvA kl f}At Al$Eb
+[NeMo I 2024-06-03 05:00:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:19 wer:330] reference:kAnt fy AlErAq w>mAkn >xrY lknhA lm tkn fy swryA wHtY AlmADy Alqryb dAE$
+[NeMo I 2024-06-03 05:00:19 wer:331] predicted:kAnt fy AlErAq w>mAkn >xrY lknhA lm tkn fy swryA wHtY AlmADy Alqryb dAE$
+[NeMo I 2024-06-03 05:00:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:20 wer:330] reference:fy Zl h*h AlSwrp Al|n >ntm Al>trAk mA*A stfElwn <*A bqyt
+[NeMo I 2024-06-03 05:00:20 wer:331] predicted:fy Zl h*h AlSwrp Al|n >ntm Al>trAk mA*A stfElwn <*A bqyt
+[NeMo I 2024-06-03 05:00:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:20 wer:330] reference:bAsm r}Asp Aljmhwryp Altrkyp kbyr Almst$Aryn llr}ys Altrky rjb Tyb >rdwgAn
+[NeMo I 2024-06-03 05:00:20 wer:331] predicted:bAsm r}Asp Aljmhwryp Altrkyp kbyr Almst$Aryn llr}ys Altrky rjb AlTyb >rdwgAn
+[NeMo I 2024-06-03 05:00:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:20 wer:330] reference:vmAnwn mqEdA Hzb Al$Eb AldymqrATy tlAtA$r wAtnA$r mn myp fy Almyp wEdd AlmqAEd tmAnyn >mA AntxAbAt Al>wl mn nwfmbr
+[NeMo I 2024-06-03 05:00:20 wer:331] predicted:mqEdA Hzb Al$Eb AldymqrATy wEdd AlmqAEd >mA AntxAbAt Al>wl mn nwfmbr
+[NeMo I 2024-06-03 05:00:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:21 wer:330] reference:Al>xrY kAn s&Aly lk Hwl mA t$klh
+[NeMo I 2024-06-03 05:00:21 wer:331] predicted:Al>xrY kAn s&Aly lk Hwl mA t$klh
+[NeMo I 2024-06-03 05:00:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:21 wer:330] reference:l*lk nHn ntHdv mE Alrws r}ysnA tHdv <lY bwtyn h*A AlSbAH wbEd
+[NeMo I 2024-06-03 05:00:21 wer:331] predicted:l*lk nHn ntHdv mE Alrws r}ysnA tHdv <lY bwtyn h*A AlSbAH wbEd
+[NeMo I 2024-06-03 05:00:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:22 wer:330] reference:wmqtl bED Al>trAk Al*yn *hbwA lfD AlHSAr En gzp
+[NeMo I 2024-06-03 05:00:22 wer:331] predicted:wmqtl bED Al>trAk Al*yn *hbwA lfD AlHSAr En gzp
+[NeMo I 2024-06-03 05:00:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:22 wer:330] reference:EndmA >dY tdxlhm <lY mqtl HwAly tsEp >w E$rp mn mwATnynA
+[NeMo I 2024-06-03 05:00:22 wer:331] predicted:EndmA >dY tdxlhm <lY mqtl HwAly mn mwATnynA
+[NeMo I 2024-06-03 05:00:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:22 wer:330] reference:wtEAml flsTynyyn kb$r ElY qdm AlmwAs AlmsAwAp
+[NeMo I 2024-06-03 05:00:22 wer:331] predicted:wtEAml AlflsTynyyn kb$r ElY qdm AlmsAwAp
+[NeMo I 2024-06-03 05:00:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:23 wer:330] reference:hnAk Alkvyr mn AlnAs y&ydwn Hq Al$Eb AlflsTyny wdA}mA >vrnA h*h AlqDyp mE Al<srA}ylyyn
+[NeMo I 2024-06-03 05:00:23 wer:331] predicted:hnAk Alkvyr mn AlnAs y&ydwn Hq Al$Eb AlflsTyny wdA}mA >vrnA h*h AlqDyp mE Al<srA}ylyyn
+[NeMo I 2024-06-03 05:00:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:23 wer:330] reference:hl t|mrt <srA}yl mE Hzbkm mE bED Aldwl AlHlyfp lhA fy AlmnTqp
+[NeMo I 2024-06-03 05:00:23 wer:331] predicted:hl t|mrt <srA}yl mE Hzbkm mE bED Aldwl AlHlyfp lhA fy AlmnTqp
+[NeMo I 2024-06-03 05:00:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:23 wer:330] reference:tbqY wAHdp mn AlqDAyA Aljwhryp l>y mbAdrp slAm fy Al$rq Al>wsT wAlTryqp AlwHydp ltHqyq AlslAm
+[NeMo I 2024-06-03 05:00:23 wer:331] predicted:tbqY wAHdp mn AlqDAyA Aljwhryp l>y mbAdrp slAm fy Al$rq Al>wsT wAlTryqp AlwHydp ltHqyq AlslAm
+[NeMo I 2024-06-03 05:00:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:24 wer:330] reference:lA >dry mn >yn j}t bh*A Alxbr Alr}ys >rdwgAn lm yql h*A AlklAm
+[NeMo I 2024-06-03 05:00:24 wer:331] predicted:mn >yn j}t bh*h Alqwp r}ys >rdwgAn lm yql h*A AlklAm
+[NeMo I 2024-06-03 05:00:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:24 wer:330] reference:ln tsmyh k*lk fy AlHqyqp hw kAn AnqlAbA
+[NeMo I 2024-06-03 05:00:24 wer:331] predicted:lm tsmh k*lk fy AlHqyqp hw kAn AnqlAbA
+[NeMo I 2024-06-03 05:00:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:24 wer:330] reference:swA' kAn >Hmd $fyq >w mrsy lA yhmnA Al>mr
+[NeMo I 2024-06-03 05:00:24 wer:331] predicted:swA' kAn >Hmd $fyq >w mrsy lA yhmnA Al>mr
+[NeMo I 2024-06-03 05:00:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:25 wer:330] reference:|xr fhm ytHdvwn En AldymqrATyp wHqwq Al<nsAn wHryp AltEbyr
+[NeMo I 2024-06-03 05:00:25 wer:331] predicted:|xr fhm ytHdvwn En AldymqrATyp Hqwq Al<nsAn wHryp AltEbyr
+[NeMo I 2024-06-03 05:00:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:25 wer:330] reference:mn AlmSryyn Swt lmrsy fy AntxAbAt kAnt nsbp Alm$Arkp fyhA mtdnyp jdA rbmA E$ryn fy AlmA}p nHw *lk
+[NeMo I 2024-06-03 05:00:25 wer:331] predicted:mn AlmSryyn Swt lmrsy fy AntxAbAt kAnt nsbp Alm$Arkp fyhA mtdnyp jdA rbmA nHw *lk
+[NeMo I 2024-06-03 05:00:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:25 wer:330] reference:hnAk tEAwn Eskry wqAEdp Eskryp sykwn fyhA rbmA vlAvp |lAf DAbT wjndy trky fy qTr
+[NeMo I 2024-06-03 05:00:25 wer:331] predicted:hnAk tEAwn Eskry wqAEdp Eskryp sykwn fyhA rbmA |lAf DAbT wjndy trky fy qTr
+[NeMo I 2024-06-03 05:00:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:26 wer:330] reference:ldynA ElAqAt Tybp jdA mE qTr ElY AlmstwyAt AldblwmAsyp wAlvqAfyp
+[NeMo I 2024-06-03 05:00:26 wer:331] predicted:ldynA ElAqAt Tybp jdA mE qTr ElY AlmstwyAt AldblwmAsyp wAlvqAfyp
+[NeMo I 2024-06-03 05:00:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:26 wer:330] reference:wrbmA sykwn fy Almstqbl
+[NeMo I 2024-06-03 05:00:26 wer:331] predicted:wrbmA sykwn fy Almstqbl
+[NeMo I 2024-06-03 05:00:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:26 wer:330] reference:ttjAwz Alhwyp AlTA}fyp wAlhwyp Aldynyp wtsbH wtSbH AlqDyp qDyp
+[NeMo I 2024-06-03 05:00:26 wer:331] predicted:ttjAwz Alhwyp AlTA}fyp wAlhwyp Aldynyp wtSbH AlqDyp qDyp
+[NeMo I 2024-06-03 05:00:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:27 wer:330] reference:hl sykwn mstqblnA EbArp En Eqd |xr mn AlHrwb qtAl byn Al$yEp wAlsnp
+[NeMo I 2024-06-03 05:00:27 wer:331] predicted:hl sykwn mstqblnA EbArp En Eqd |xr mn AlHrwb qtAl byn Al$yEp wAlsnp
+[NeMo I 2024-06-03 05:00:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:27 wer:330] reference:>Etqd >n Alwqt qd HAn fqd dfEnA Alkvyr mn
+[NeMo I 2024-06-03 05:00:27 wer:331] predicted:>Etqd >n Alwqt qd HAn fqd dfEnA Alkvyr mn
+[NeMo I 2024-06-03 05:00:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:27 wer:330] reference:<lY trkyA vm <lY >wrwbA
+[NeMo I 2024-06-03 05:00:27 wer:331] predicted:<lY trkyA vm <lY >wrwbA
+[NeMo I 2024-06-03 05:00:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:28 wer:330] reference:lh*A Alsbb nHn nbny nfqA swf y>ty
+[NeMo I 2024-06-03 05:00:28 wer:331] predicted:lh*A Alsbb nHn nbny nfqA swf y>ty
+[NeMo I 2024-06-03 05:00:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:28 wer:330] reference:mn AlSyn <lY gyrhA Alnmw bTy' ElynA >n nHy AqtSAdnA mn jdyd
+[NeMo I 2024-06-03 05:00:28 wer:331] predicted:mn AlSyn <lY gyrhA Alnmw bTyEp ElynA >n nHy AqtSAdnA mn jdyd
+[NeMo I 2024-06-03 05:00:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:28 wer:330] reference:bEd <ElAn wzyrp AltElym AljzA}ryp En nythA tdrys AlmrHlp Al tdrys AlmrHlp AlAbtdA}yp
+[NeMo I 2024-06-03 05:00:28 wer:331] predicted:bEd <ElAn wzyrp AltElym AljzA}ryp En nythA tdrys AlmrHlp AlAbtdA}yp
+[NeMo I 2024-06-03 05:00:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:29 wer:330] reference:ffAj> AljmyE wxATb Al$Eb AljzA}ry bAllgp Alfrnsyp lgp AlmHtl
+[NeMo I 2024-06-03 05:00:29 wer:331] predicted:ffAj> AljmyE wxATb Al$Eb AljzA}ry bAllgp Alfrnsyp lgp AlmHtl
+[NeMo I 2024-06-03 05:00:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:29 wer:330] reference:>xtyr wzyrA lltrbyp wAltElym HtY AlEAm >lf wtsEmA}p wAvnAn wtsEyn vm sfyrA fy AlqAhrp HtY AlEAm >rbEp wtsEyn
+[NeMo I 2024-06-03 05:00:29 wer:331] predicted:Axtyr wzyrA lltrbyp wAltElym HtY AlEAm vm sfyrA fy AlqAhrp HtY AlEAm
+[NeMo I 2024-06-03 05:00:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:29 wer:330] reference:wlkn AlmwDwE Al>sAsy mA ft} yrjE fy kl mrp ttHdv ytHdv ms&wl En Al<SlAH l>n Al<SlAH
+[NeMo I 2024-06-03 05:00:29 wer:331] predicted:wlkn AlmwDwE Al>sAsy mA fAt} yrjE fy kl mrp ytHdv ms&wl En AlSlAH l>n Al<SlAH
+[NeMo I 2024-06-03 05:00:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:30 wer:330] reference:kAn kl $y' ynbgy >n ybtdE mn jdyd l>n AlmElmyn Al*yn kAnwA yqwmwn bAltElym
+[NeMo I 2024-06-03 05:00:30 wer:331] predicted:kAn kl $y' ynbgy >n ybtdE mn jdyd l>n AlmElmyn Al*yn kAnwA yqwmwn bAltElym
+[NeMo I 2024-06-03 05:00:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:30 wer:330] reference:gyr h&lA' Al*yn kAnwA yElmwn wmn hnA wqEt Al>zmp >zmp AltElym wAHtAjt AljzA}r
+[NeMo I 2024-06-03 05:00:30 wer:331] predicted:gyr h&lA' Al*yn kAnwA yElmwn wmn hnA wqEt Al>zmp >zmp AltElym wAHtAjt AljzA}r
+[NeMo I 2024-06-03 05:00:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:31 wer:330] reference:Atx*t mrAbT lxywl AlAstEmAr lxywl Aljy$ AlAstEmAry w>hm $y' qDY ElY AltElym >yDA hw Al>wqAf
+[NeMo I 2024-06-03 05:00:31 wer:331] predicted:Atx*t mrAbT xywl AlAstEmAr xywl Aljy$ AlAstEmAry w>hm $y' qDY ElY AltElym >yDA hw Al>wqAf
+[NeMo I 2024-06-03 05:00:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:31 wer:330] reference:wmn Almgrb lmA*A lsbb ZAhr wlnbd> bnAblywn EndmA dxl mSr lm yqD ElY Al>zhr wEndmA jA' Al<njlyz lm yqDwA ElY Al>zhr
+[NeMo I 2024-06-03 05:00:31 wer:331] predicted:wmn Almgrb lmA*A lsbb ZAhr wlnbd> bnA wlwn EndmA dxl mSr lm yqD ElY Al>zhr wEndmA jA' Al<njlyz lm yqDwA ElY Al>zhr
+[NeMo I 2024-06-03 05:00:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:31 wer:330] reference:frnsA tElm Allgp Alfrnsyp wlkn AlmjtmE Almdny Al*y nsmyh Alywm AlmjtmE Almdny wAljmEyAt
+[NeMo I 2024-06-03 05:00:31 wer:331] predicted:frnsA tElm Allgp Alfrnsyp wlkn AlmjtmE Almdny Al*y nsmyh Alywm AlmjtmE Almdny wAljmEyAt
+[NeMo I 2024-06-03 05:00:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:32 wer:330] reference:kl xTwp tqwm bhA Aldwlp ltEryb AltElym tsyr mEhA xTwp EdAwp
+[NeMo I 2024-06-03 05:00:32 wer:331] predicted:kl xTwp tqwm bhA Aldwlp ltEryb AltElym tsyr mEhA xTwp EdAwp
+[NeMo I 2024-06-03 05:00:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:32 wer:330] reference:lmA*A l>n AlErbyp fy nZrhm EAjzp wlA tSlH >n tkwn lgp tElym wlkn Al>grb mn h*A
+[NeMo I 2024-06-03 05:00:32 wer:331] predicted:lmA*A l>n AlErbyp fy nZrhm EAjzp wlA tSlH >n tkwn lgp AltElym wlkn Al>grb mn h*A
+[NeMo I 2024-06-03 05:00:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:33 wer:330] reference:AltrAn yEny AltrAn bAlfrnsy wfAyt bAlErby fdhm Tfl
+[NeMo I 2024-06-03 05:00:33 wer:331] predicted:rAn yEny rAn bfrnsA AlqTAr fAyt bAlErb Adhm Tfl
+[NeMo I 2024-06-03 05:00:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:33 wer:330] reference:hw rwHy wAlEql wnmwt Elyh w<n kAn tjwny bAlsywf AlqtAlp Hlwp nmwt Elyh dy nmwt hw rwHy wAlEql hw rwHy wEqly wnmwt Elyh
+[NeMo I 2024-06-03 05:00:33 wer:331] predicted:hw rwHy hw Al>ql wAlmwt Elyh wkAn jwny bAlsywf AlqtAlp HlwA mtEdyn mt hw rwHy wlA >ql hw rwHy wEqly wmwt dy
+[NeMo I 2024-06-03 05:00:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:34 wer:330] reference:HynmA kAn wzyrA ll<ElAm b*l jhdA kbyrA fy Emlyp AltEryb HtY wSl Al>mr <lY >n tErb n$rp Al>xbAr
+[NeMo I 2024-06-03 05:00:34 wer:331] predicted:HynmA kAn wzyrA ll<ElAm b*l jhdA kbyrA fy Emlyp AltEryb HtY wSl Al>mr <lY >n tErb n$rp Al>xbAr
+[NeMo I 2024-06-03 05:00:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:34 wer:330] reference:wytElm Al>wlAd fy AlmdArs >m ybqwn xArj Almdrsp h*A hw AlrhAn wl*lk kAnt Ht yEny HtY >wAxr AlstynAt
+[NeMo I 2024-06-03 05:00:34 wer:331] predicted:wytElm Al>wlAd fy AlmdArs >m ybqY lhA xArj Almdrsp h*A hw AlrhAn wl*lk kAnt yEny HtY <lY >wAxr AlstynAt
+[NeMo I 2024-06-03 05:00:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:35 wer:330] reference:fqT fqT xmsmA}p TAlb jAmEy Al>TfAl Al*yn hm fy sn AldrAsp
+[NeMo I 2024-06-03 05:00:35 wer:331] predicted:fqT fqr TAlb jAmEy Al>TfAl Al*yn hm fy sn AldrAsp
+[NeMo I 2024-06-03 05:00:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:35 wer:330] reference:yEny frnsA HrSt TwAl Alftrp AlAstEmAryp >n Al$Eb AljzA}ry ybqY jAhlA >myA lA yErf
+[NeMo I 2024-06-03 05:00:35 wer:331] predicted:yEny lfrnsA HrSt TwAl Alftrp AlAstEmAryp >n Al$Eb AljzA}ry ybqY jAhlA >myA lA yErf
+[NeMo I 2024-06-03 05:00:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:36 wer:330] reference:mA}p Tbyb wSydly fy AljzA}r ltsE mlAyyn jzA}ry trkt E$r mhndsyn yEdwn ElY >SAbE Alydyn
+[NeMo I 2024-06-03 05:00:36 wer:331] predicted:m}p Tbyb wsydly fy AljzA}r l mlAyyn jzA}ry trkt mhndsyn yEdwn ElY >SAbE Alydyn
+[NeMo I 2024-06-03 05:00:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:36 wer:330] reference:>nhA ybqY tkwyn Alfrd AljzA}ry mnAhDA llAstEmAr lmA EAnAh mn AlAstEmAr
+[NeMo I 2024-06-03 05:00:36 wer:331] predicted:>nh ybqY tkwyn Alfrd AljzA}ry mnAhDA llAstEmAr lmA EAnAh mn AlAstEmAr
+[NeMo I 2024-06-03 05:00:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:36 wer:330] reference:nkAyp fy AljzA}r Alty >mmt Albtrwl wkAn Albtrwl mEZmh fy yd frnsA nEm
+[NeMo I 2024-06-03 05:00:36 wer:331] predicted:nkAyp fy AljzA}r Alty >mmt Albtrwl wkAn Albtrwl mEZmh fy yd frnsA nm
+[NeMo I 2024-06-03 05:00:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:37 wer:330] reference:fj>p HSl tgyyr wzAry wHdvt mEh mfAj>p kbyrp SHyH AlmfAj>p Alkbyrp hy tEyyn vlAvp mn AlwzrA'
+[NeMo I 2024-06-03 05:00:37 wer:331] predicted:fj>p HSl tgyyr wzAry wHdvt mEh mfAj>p kbyrp SHyH mfAj>p Alkbyrp hy tEyyn vlAv mn AlwzrA'
+[NeMo I 2024-06-03 05:00:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:37 wer:330] reference:kAn kAn ms&wl <ElAmy kbyr fy Alvwrp wAl>stA* Ebd AllTyf rHAl >yDA mn AlmjAhdyn AlqdmA' yEny lA gbAr Elyhm fy h*A AljAnb
+[NeMo I 2024-06-03 05:00:37 wer:331] predicted:kAn ms&wlA <ElAmyA kbyrA fy Alvwrp wAl>stA* Ebd AllTyf rHAn >yDA mn AlmjAhdyn AlqdAmY yEny lA EbArp Elyhm fy h*A AljAnb
+[NeMo I 2024-06-03 05:00:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:38 wer:330] reference:w>Hdvt vmAny mrAs mrAsym mrAs mrAsym nEm mrAsym tqnn AltElym AlvAnwy wAltElym Al>sAsy <lY |xrh
+[NeMo I 2024-06-03 05:00:38 wer:331] predicted:w>Hdvt n mrAsym nEm mrAsym tqnn AltElym AlvAnwy wAltElym Al>sAsy <lY |xrh
+[NeMo I 2024-06-03 05:00:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:38 wer:330] reference:fy AljAnb yEny AlAjtmAEy wAltAryxy lHrkp AlmjtmE AljzA}ry bAlnsbp lltrbyp kAn lh r>y $A*
+[NeMo I 2024-06-03 05:00:38 wer:331] predicted:fy AljAnb Eny AlAjtmAEy wAltAryxy lHrkp AlmjtmE AljzA}ry bAlnsbp lltrbyp kAn lh r>y $A*
+[NeMo I 2024-06-03 05:00:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:38 wer:330] reference:wqd r>ynA klAm Alr}ys bwmdyn >n Altrbyp lA tkwn trbyp wTnyp <lA <*A AstjAbt llgp Al$Eb
+[NeMo I 2024-06-03 05:00:38 wer:331] predicted:wqd r>ynA klAm Alr}ys >bw mdn >n Altrbyp lA tkwn trbyp wTnyp <lA <*A AstjAbt llgp Al$Eb
+[NeMo I 2024-06-03 05:00:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:39 wer:330] reference:h*A Aljyl Al*y Erb snp >wl fy vmAnyn hw Al*y wqE fy s fy EndmA tqdm llbkAlwryA
+[NeMo I 2024-06-03 05:00:39 wer:331] predicted:h*A Aljyl Al*y grb snp >wlY fy vmAnyn hw Al*y wqE EndmA tqdm llbkAtwryA
+[NeMo I 2024-06-03 05:00:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:39 wer:330] reference:l>nh mvlA lys hnAk $y' bAlEks kl AlnSwS AlsyAsyp wAlqAnwnyp
+[NeMo I 2024-06-03 05:00:39 wer:331] predicted:l>nh mvlA lys hnAk $y' bAlEks kl AlnSwS AlsyAsyp wAlqAnwnyp
+[NeMo I 2024-06-03 05:00:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:40 wer:330] reference:ElY Ejl wbED bmn HDr SAdqwA ElY lA}Hp wqAlwA lA ymkn
+[NeMo I 2024-06-03 05:00:40 wer:331] predicted:ElY Ejl wbED bmn HDr SdqwA ElY lA}Hp wqAlwA lA ymkn
+[NeMo I 2024-06-03 05:00:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:40 wer:330] reference:yqwl >n AltEryb ytm ywm xmsp ywlyw wnHn AbEd mn >n nstTyE fEl h*A fAnA AqtrHt Elyh Sygp
+[NeMo I 2024-06-03 05:00:40 wer:331] predicted:yqwl >n AltEryb ytm ywm ywlyw fyh wnHn >bEd mn >n nstTyE fEl h*A nEm >nA AqtrHt Elyh Sygp
+[NeMo I 2024-06-03 05:00:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:41 wer:330] reference:>nA Endy >s}lp kvyrp mn Alm$Ahdyn tryd >n tErf sr Al<TAHp bk mn wzArp Altrbyp
+[NeMo I 2024-06-03 05:00:41 wer:331] predicted:>nA Endy >s}lp kvyrp mn Alm$Ahdyn tryd >n tErf sr Al<TAHp bk mn wzArp Altrbyp
+[NeMo I 2024-06-03 05:00:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:41 wer:330] reference:Altrbwyp wAllgwyp ln$r >fkAr AltyAr Altgryby fy AljzA}r
+[NeMo I 2024-06-03 05:00:41 wer:331] predicted:Altrbwyp wAllgwyp ln$r >fkAr AltyAr Altgryby fy AljzA}r
+[NeMo I 2024-06-03 05:00:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:41 wer:330] reference:>ETwhm Al>wrAq Alty stkwn gdA fy AlAmtHAn
+[NeMo I 2024-06-03 05:00:41 wer:331] predicted:>ETwhm Al>wrAq Alty stkwn gdA fy AlAmtHAn
+[NeMo I 2024-06-03 05:00:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:42 wer:330] reference:wEndmA tdxl Al AlmwDwE kbyr kdh hw h*A wh*A AlmwDwE lys mwDwE AljzA}ryyn Al*yn yHbwn frnsA fqT hw mwDwE frnsA >yDA
+[NeMo I 2024-06-03 05:00:42 wer:331] predicted:wEndmA tdxl lA mwDwE kbyr wh*A mwDwE lys mwDwE AljzA}ryyn Al*yn yHbwn frnsA fqT hw mwDwE frnsA >yDA
+[NeMo I 2024-06-03 05:00:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:42 wer:330] reference:w>nhA tsyr fy Tryq tqrybA msdwd qdmt lh AstqAlty wEndmA dEAny lmA*A
+[NeMo I 2024-06-03 05:00:42 wer:331] predicted:w>nhA tsyr fy Tryq tqrybA msdwd qdmt lh AstqAlty wEndmA dEAny lmA*A
+[NeMo I 2024-06-03 05:00:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:42 wer:330] reference:kAn lhA >rbE |lAf Atnyn wstyn |h Atnyn wtsEyn Atnyn wtsEyn tlAtyn snp yEny SAr lhA >rbEp |lAf mhnds
+[NeMo I 2024-06-03 05:00:42 wer:331] predicted:kAn lhA lf snp SAr lhA |lf mhnds
+[NeMo I 2024-06-03 05:00:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:43 wer:330] reference:>n >trAjE En AlAstqAlp wyqwl ly lw Ank ttmA$y fy AstqAltk stkwn kmn ESY flm ykn b<mkAny
+[NeMo I 2024-06-03 05:00:43 wer:331] predicted:>n >trAjE En AlAstqAlp wyqwl ly lw >nk ttmA$Y fy AstqAlty lA tkwn kmn ESf flm ykn b<mkAny
+[NeMo I 2024-06-03 05:00:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:43 wer:330] reference:wykwn AlAxtyAr l>wlyA' AltlAmy* byn <HdY Allgtyn AlEAlmytyn yA Alfrnsyp yA Al<njlyzyp
+[NeMo I 2024-06-03 05:00:43 wer:331] predicted:wykwn AlAxtyAr l>wlyA' AltlAmy* byn <HdY Allgtyn AlEAlmytyn hy Alfrnsyp hy Al<njlyzyp
+[NeMo I 2024-06-03 05:00:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:44 wer:330] reference:Al*y yHrs dywAn AlAmtHAnAt TwAl Alsnp hw mwjwd Al|n <mbArH mA jA$ wAlywm mA jA$
+[NeMo I 2024-06-03 05:00:44 wer:331] predicted:Al*y yHrS dywAn AlAmtHAnAt TwAl Alsnp hw mwjwd Al|n AlbArH mA jy$ Alywm mA jy$
+[NeMo I 2024-06-03 05:00:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:44 wer:330] reference:HtY Alywm wAlm$klp Al>kbr >n Alr}ys bwtflyqp yxATb $Ebh bAllgp Alfrnsyp
+[NeMo I 2024-06-03 05:00:44 wer:331] predicted:HtY Alywm wAlm$klp Al>kbr >n Alr}ys bwtflyqp yxATb $Ebh bAllgp Alfrnsyp
+[NeMo I 2024-06-03 05:00:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:45 wer:330] reference:AhtmAmy wtfkyry Alywm lys fy Al*yn twzE Elyhm $hAdAt AlnjAH
+[NeMo I 2024-06-03 05:00:45 wer:331] predicted:AhtmAmy wtfkyry Alywm lys fy Al*yn twzE Elyhm $hAdAt AlnjAH
+[NeMo I 2024-06-03 05:00:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:45 wer:330] reference:mnhA ytfrE ttfrE Al$Eb fAl*y hw qAdr ElY >n ySl <lY AlbkAlwryA
+[NeMo I 2024-06-03 05:00:45 wer:331] predicted:mnhA ttfrE >$wr fAl*y hw qAdr ElY >n ySl <lY AlbkAlwryA
+[NeMo I 2024-06-03 05:00:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:45 wer:330] reference:wtr$H llbkAlwryA w mnjH$ qAl hw tlmy* wwSl llqsm AlnhA}y fytHAyl wydxlh <lY AljAmEp
+[NeMo I 2024-06-03 05:00:45 wer:331] predicted:tr$H AlbqA' dwryp >w mA njH qAl hw tnmyp wSlnA llqsm AlnhA}y ytHAyl wydxl <lY AljAmEp
+[NeMo I 2024-06-03 05:00:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:46 wer:330] reference:<lA mn rHm rbk fy dwlp mn >gnY Aldwl AlErbyp dxlA wnfTA fy zmAn kAn Aljy$
+[NeMo I 2024-06-03 05:00:46 wer:331] predicted:<lA mn rHm rbh fy dwlp mn >gnY Aldwl AlErbyp dwlp gnyp nfTA fy zmAn kAn Aljy$
+[NeMo I 2024-06-03 05:00:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:46 wer:330] reference:fy Zl AlmErkp Alkbyrp Al|n byn Almtfrnsyn wAlErwbyyn
+[NeMo I 2024-06-03 05:00:46 wer:331] predicted:fy Zl AlmErkp Alkbyrp Al|n byn Almtfrsyn wAlErwbyyn
+[NeMo I 2024-06-03 05:00:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:47 wer:330] reference:>w rAm <dmAjA lh rAm AlmHAl mn AlTlb
+[NeMo I 2024-06-03 05:00:47 wer:331] predicted:>w rAm <dmAjA lh fy AlmjtmE Alfrnsy rAm AlmHAlp mn AlTlb
+[NeMo I 2024-06-03 05:00:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:47 wer:330] reference:tAryx Allgp AlErbyp klh tAryx AnftAH ElY Al$Ewb fy $Ewb fy nAs ElmA' Erb hm lyswA Erb fy Al>Sl
+[NeMo I 2024-06-03 05:00:47 wer:331] predicted:tAryx Allgp AlErbyp klh tAryx AnftAHA ElY Al$Ewb fyh $Ewb fyh nAs lElmA' Erb hm lyswA Erb fy Al>Sl
+[NeMo I 2024-06-03 05:00:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:48 wer:330] reference:jA' ydrsnA EndmA gAb Ast>*nA jA' ydrsnA fqAl lgtnA AlfArsyp >kvr mn xmsyn bAlmA}p
+[NeMo I 2024-06-03 05:00:48 wer:331] predicted:jA' ydrsnA EndmA gAb >stA*nA jA' ydrsnA fqAl lgtnA AlfArsyp >kvr mn l
+[NeMo I 2024-06-03 05:00:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:48 wer:330] reference:yEny h*h AlmSAnE wAlmEAml btAE AlAsmnt w|xrh klhA mktwbp bAlSynyp
+[NeMo I 2024-06-03 05:00:48 wer:331] predicted:yEny h*h AlmSAnE wAlmEAml tE Al<smnt w<lY |xrh klhA mktbp bAlSynyp
+[NeMo I 2024-06-03 05:00:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:48 wer:330] reference:Alm$rq AlErby >nA >sf >n >qwl fy bED bldAn Alxlyj <*A knt lA tErf Al<njlyzyp lA tstTyE >n t$rb qhwp
+[NeMo I 2024-06-03 05:00:48 wer:331] predicted:Alm$rq AlErby >nA |sf >n >qwl fy bED bldAn Alxlyj <*A knt lA tErf Al<njlyzyp lA tstTyE >n t$rb qhwp
+[NeMo I 2024-06-03 05:00:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:49 wer:330] reference:yHyykm blA Hdwd wAlslAm Elykm wrHmp Allh wbrkAth
+[NeMo I 2024-06-03 05:00:49 wer:331] predicted:yHyykm blA Hdwd wAlslAm Elykm wrHmp Allh wbrkAth
+[NeMo I 2024-06-03 05:00:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:49 wer:330] reference:mtSdyA lhm bbsAlp lymnEhm mn <TlAq AlnAr
+[NeMo I 2024-06-03 05:00:49 wer:331] predicted:mtSdyA lhm bbsAlp lymnEhm mn <TlAq AlnAr
+[NeMo I 2024-06-03 05:00:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:49 wer:330] reference:>SbH mE mjmwEp mn AlmSwryn AlhwAp ymvlwn Alwjh Al|xr llnDAl AlflsTyny
+[NeMo I 2024-06-03 05:00:49 wer:331] predicted:>SbH mE mjmwEp mn AlmSwryn AlhwAp ymvlwn Alwjh Al|xr llnDAl AlflsTyny
+[NeMo I 2024-06-03 05:00:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:50 wer:330] reference:wfy Alxlyl Zhr msn flsTyny fy tsjyl mSwr
+[NeMo I 2024-06-03 05:00:50 wer:331] predicted:wfy Alxlyl Zhr msn flsTyny fy tsjyl mSwr
+[NeMo I 2024-06-03 05:00:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:50 wer:330] reference:fD AlmZAhrAt kyf >nhm bhmjyp EAlyp fnHAwl nwvq <HnA Al>$y lnfrjy AlnAs >w AlEAlm
+[NeMo I 2024-06-03 05:00:50 wer:331] predicted:fD AlmZAhrAt kyf >nh hmjyp EAlyp fnHAwl >n nwvq <HnA ly $y' l>n frj AlnAs >w AlEAlm
+[NeMo I 2024-06-03 05:00:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:51 wer:330] reference:fqd wvqt AllHZp kAmyrAt Edd mn AlmSwryn wAln$TA' AlmHlyyn
+[NeMo I 2024-06-03 05:00:51 wer:331] predicted:fqd wvqt AllHZp kAmyrAt Edd mn AlmSwryn wAln$TA' AlmHlyyn
+[NeMo I 2024-06-03 05:00:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:51 wer:330] reference:mE bED >sEfnAh wnqlnAh <lY Al<sEAf
+[NeMo I 2024-06-03 05:00:51 wer:331] predicted:mE bED >sEfnA wnqlnA <lY Al>sAf
+[NeMo I 2024-06-03 05:00:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:52 wer:330] reference:Ast$hd <yAd ElY Alfwr wmA lbvt Swrth mTArdA lljndy >n Ant$rt Ebr AlAntrnt wAlqnwAt Al<xbAryp
+[NeMo I 2024-06-03 05:00:52 wer:331] predicted:Ast$hd <yAd ElY Alfwr wmA lbvt Swrth mTArdA lljndy >n Ant$rt Ebr Al<ntrnt wAlqnwAt Al<xbAryp
+[NeMo I 2024-06-03 05:00:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:52 wer:330] reference:rbmA lm ytsnY ll<ElAm wAlkAmyrAt rSdhA jmyEA lkn Alywm wfy ESr AltknwlwjyA wAltwASl
+[NeMo I 2024-06-03 05:00:52 wer:331] predicted:rbmA lm ytsn ll<ElAm wAlkAmyrAt rSdhA jmyEA lkn Alywm wfy ESr AltknwlwjyA wAltwASl
+[NeMo I 2024-06-03 05:00:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:52 wer:330] reference:bEd AlfASl AlqAbDwn ElY jmr Almhnp fy Almksyk kyf ttHwl AlSHAfp <lY sAHp rmAyp
+[NeMo I 2024-06-03 05:00:52 wer:331] predicted:bEd AlfASl AlqAbDwn ElY jmr Almhnp fy Almksyk kyf ttHwl AlSHAfp <lY sAHp rmAyp
+[NeMo I 2024-06-03 05:00:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:53 wer:330] reference:lm tErf Al>sbAb Alty jmEt Al$xSyn mEA lkn AlErf Almksyky
+[NeMo I 2024-06-03 05:00:53 wer:331] predicted:lm tErf Al>sbAb Alty jmEt Al$xSyn mEA lkn AlErf Almksyky
+[NeMo I 2024-06-03 05:00:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:53 wer:330] reference:EndmA gAdrt Almnzl r>yt vlAvp rjAl yntZrwn fy syArp >jrp
+[NeMo I 2024-06-03 05:00:53 wer:331] predicted:EndmA gAdrt Almnzl r>yt vlAvp rjAl yntZrwn fy syArp >jrY
+[NeMo I 2024-06-03 05:00:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:53 wer:330] reference:lm yEtqd b>hmyp Al>mr bl r>Y fyh tnAqDA wADHA
+[NeMo I 2024-06-03 05:00:53 wer:331] predicted:lm yEtqd b>hmyp Al>mr bl r>Y fyh tnAqDA wADHA
+[NeMo I 2024-06-03 05:00:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:54 wer:330] reference:mn wAjb AlHkwmp >n tHmy mwATnyhA wbAlnsbp llSHfyyn tHdydA
+[NeMo I 2024-06-03 05:00:54 wer:331] predicted:mn wAjb AlHkwmp >n tHmy mwATnyhA wbAlnsbp llSHfyyn tHdydA
+[NeMo I 2024-06-03 05:00:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:54 wer:330] reference:hl <n qwAnyn AlHmAyp lA tEml >Etqd >nhA lA twjd >SlA
+[NeMo I 2024-06-03 05:00:54 wer:331] predicted:<n qwAnyn AlHmAyp lA tEml >Etqd >nhA lA twjd >SlA
+[NeMo I 2024-06-03 05:00:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:54 wer:330] reference:Evr ElY AlSHfyp fyrjynA mArtynyz wAlty kAnt >Edt tqAryr En AlESAbAt lmjlp brwsyzw
+[NeMo I 2024-06-03 05:00:54 wer:331] predicted:Evr ElY SHfyp ryjynA mArtynyz wAlty kAnt >Edt tqAryr En AlESAbAt lmjlp brwsyzw
+[NeMo I 2024-06-03 05:00:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:55 wer:330] reference:llHSwl ElY AlmElwmp wAl>hdAf Al>xrY
+[NeMo I 2024-06-03 05:00:55 wer:331] predicted:llHSwl ElY AlmElwmp wAl>hdAf Al>xrY
+[NeMo I 2024-06-03 05:00:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:55 wer:330] reference:Al>mr lys ktgTyp Hrb tErf mwAqf AlnAs wfy >y xndq yqfwn
+[NeMo I 2024-06-03 05:00:55 wer:331] predicted:Al>mr lys ktgTyp Hrb tErf mwAqf AlnAs wfy >y xndq yqfwn
+[NeMo I 2024-06-03 05:00:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:55 wer:330] reference:AlxTr Al>kbr hw Al<flAt mn AlEqAb l>n h*A y$jE Almjrmyn wl>n lA $y' yHdv lhm
+[NeMo I 2024-06-03 05:00:55 wer:331] predicted:AlxTr Al>kbr hw Al<flAt mn AlEqAb l>n h*A y$jE Almjrmyn wl>n lA $y' yHdv lhm
+[NeMo I 2024-06-03 05:00:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:56 wer:330] reference:fAlEmAl wAlTlbp wAln$TA' wAlmhAjrwn wf}At >xrY ttErD bdwrhA llEnf
+[NeMo I 2024-06-03 05:00:56 wer:331] predicted:fAlEmAl wAlTlbp wAln$TA' wAlmhAjrwn wf}At >xrY ttErD bdwrhA llEnf
+[NeMo I 2024-06-03 05:00:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:56 wer:330] reference:snrsl lk $yfrp ElY hAtfk AlxAS ln ykwn bAl<mkAn ftH AlHsAb <lA End AstxdAmhA
+[NeMo I 2024-06-03 05:00:56 wer:331] predicted:snrsl lk $frp ElY hAtfk AlxAS ln ykwn bAl<mkAn ftH AlHsAb <lA End AstxdAmhA
+[NeMo I 2024-06-03 05:00:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:57 wer:330] reference:AlAxtrAqAt AlAlktrwnyp fy AlwlAyAt AlmtHdp TAlt h*h Almrp
+[NeMo I 2024-06-03 05:00:57 wer:331] predicted:AlAxtrAqAt Al<lktrwnyp fy AlwlAyAt AlmtHdp TAlt h*h Almrp
+[NeMo I 2024-06-03 05:00:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:57 wer:330] reference:>Elnt mjmwEp mn Altqnyyn Alfnlndyyn xbr AbtkArhm TrAzA jdydA mn Alkwmbywtr AlmHmwl
+[NeMo I 2024-06-03 05:00:57 wer:331] predicted:>Elnt mjmwEp mn Altqnyyn Alflndyyn xbr AbtkArhm TrAzA jdydA mn Alkmbywtr AlmHmwl
+[NeMo I 2024-06-03 05:00:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:57 wer:330] reference:Ebr HsAbAt AlbrnAmj ElY fys bwk wtwytr wmwqE Aljzyrp nt kmA ymknkm dA}mA mrAslp fryq AlbrnAmj mbA$rp
+[NeMo I 2024-06-03 05:00:57 wer:331] predicted:Ebr HsAbAt AlbrnAmj ElY fysbwk wtwytr wmwqE Aljzyrp nt kmA ymknkm dA}mA mrAslp fryq AlbrnAmj mbA$rp
+[NeMo I 2024-06-03 05:00:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:58 wer:330] reference:m$AhdynA Al>EzA' AlslAm Elykm wrHmp llh >hlA bkm fy h*A AllqA' AlxAS Al*y njryh mE Alr}ys Altrky rjb Tyb >rdwgAn
+[NeMo I 2024-06-03 05:00:58 wer:331] predicted:m$AhdynA Al>EzA' AlslAm Elykm wrHmp Allh w>hlA bkm fy h*A AllqA' AlxAS Al*y njryh mE Alr}ys Altrky rjb Tyb >rdwgAn
+[NeMo I 2024-06-03 05:00:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:58 wer:330] reference:<n >rdnA >n nqym AlwDE fy swryA b$kl HyAdy wdwn mwArbp f<nh sykwn mn AlxT>
+[NeMo I 2024-06-03 05:00:58 wer:331] predicted:<n >rdnA >n nqym AlwDE fy swryA b$kl HyAdy wdwn mwArbp f<nh sykwn mn AlxT>
+[NeMo I 2024-06-03 05:00:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:58 wer:330] reference:lkn w>vnA' *lk r>ynA >n rwsyA bAl>ms hAjmt swryA b$kl mxtlf jdA
+[NeMo I 2024-06-03 05:00:58 wer:331] predicted:lkn w>vnA' *lk r>ynA >n rwsyA bAl>ms hAjmt swryA b$kl mxtlf jdA
+[NeMo I 2024-06-03 05:00:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:58 wer:330] reference:lkn t>sys AlslAm mE bqA' Al>sd gyr mmkn
+[NeMo I 2024-06-03 05:00:58 wer:331] predicted:lkn t>sys AlslAm mE bqA' Al>sd gyr mmkn
+[NeMo I 2024-06-03 05:00:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:58 wer:330] reference:tkwn Al<rAdp Al$Ebyp mtnf*p fyh
+[NeMo I 2024-06-03 05:00:58 wer:331] predicted:tkwn Al<rAdp Al$Ebyp mtnf*p fyhA
+[NeMo I 2024-06-03 05:00:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:59 wer:330] reference:<n rwsyA >rslt TA}rAthA lswryA
+[NeMo I 2024-06-03 05:00:59 wer:331] predicted:<n rwsyA >rslt TA}rAthA lswryA
+[NeMo I 2024-06-03 05:00:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:00:59 wer:330] reference:<n kfAHhA mwjh nHw dAE$ lkn h*h AlEmlyAt lyst Dd dAE$
+[NeMo I 2024-06-03 05:00:59 wer:331] predicted:<n kfAHhA mwjh nHw dAE$ lkn h*h AlEmlyAt lyst Dd dAE$
+[NeMo I 2024-06-03 05:01:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:00 wer:330] reference:qbyH fElA kmA yqwlwn lkn dAE$ qbyHp wxTrp fy Alwqt *Ath hk*A yqwlwn
+[NeMo I 2024-06-03 05:01:00 wer:331] predicted:qbyH fElA kmA yqwlwn lkn dAE$ qbyHp wxTrp fy Alwqt *Ath hk*A yqwlwn
+[NeMo I 2024-06-03 05:01:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:00 wer:330] reference:wqd bd>nA Almsyrp mEA wmstmrwn fy Almsyrp nfshA mEA
+[NeMo I 2024-06-03 05:01:00 wer:331] predicted:wqd bd>nA Almsyrp mEA wmstmrwn fy Almsyrp nfshA mEA
+[NeMo I 2024-06-03 05:01:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:00 wer:330] reference:bAlTA}rAt AlEskryp ws>blgh >sfy b$kl xAS s>Tlb mnh
+[NeMo I 2024-06-03 05:01:00 wer:331] predicted:bAlTA}rAt AlEskryp ws>blgh >sfy b$kl xAS s>Tlb mnh
+[NeMo I 2024-06-03 05:01:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:00 wer:330] reference:fy AjtmAEnA Al*y >jrynAh fy mwskw bAl<DAfp <lY AjtmAE wzrA' xArjytnA
+[NeMo I 2024-06-03 05:01:00 wer:331] predicted:AjtmAEnA Al*y >jrynAh fy mwskw bAl<DAfp <lY AjtmAE wzrA' xArjytnA
+[NeMo I 2024-06-03 05:01:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:01 wer:330] reference:lm tkn rAgbp fy t>sys mnTqp |mnp
+[NeMo I 2024-06-03 05:01:01 wer:331] predicted:lm tkn rAgbp fy t>sys mnTqp |mnp
+[NeMo I 2024-06-03 05:01:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:01 wer:330] reference:w>nA m&mn b>n <n$A' AlmsAkn llAj}yn fy mvl h*h AlmnTqp AlxAlyp mn Al<rhAb
+[NeMo I 2024-06-03 05:01:01 wer:331] predicted:w>nA m&mn b>n <n$A' AlmsAkn llAj}yn fy mvl h*h AlmnTqp AlxAlyp mn Al<rhAb
+[NeMo I 2024-06-03 05:01:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:01 wer:330] reference:mn frDhA mn EnASr xArjyp f$l h*A AlmqtrH >yDA wh*h AlxTp f$lt >yDA
+[NeMo I 2024-06-03 05:01:01 wer:331] predicted:mn frDhA mn EnASr xArjyp f$l h*A AlmqtrH >yDA w h*h AlxTp f$lt >yDA
+[NeMo I 2024-06-03 05:01:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:01 wer:330] reference:mn* vlAv snwAt wh*A Alm$rwE sy>ty bAlrAHp llmnTqp
+[NeMo I 2024-06-03 05:01:01 wer:331] predicted:mn* vlAv snwAt wh*A Alm$rwE sy>ty bAlrAHp llmnTqp
+[NeMo I 2024-06-03 05:01:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:02 wer:330] reference:s>tHdv Hwl AlmwDwE mE Alms&wlyn fy Almmlkp AlErbyp AlsEwdyp mrp >xrY
+[NeMo I 2024-06-03 05:01:02 wer:331] predicted:s>tHdv Hwl AlmwDwE mE Alms&wlyn fy Almmlkp AlErbyp AlsEwdyp mrp >xrY
+[NeMo I 2024-06-03 05:01:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:02 wer:330] reference:wlA ttkbdwn h*h Alm$qp bmfrdkm mA qwlkm
+[NeMo I 2024-06-03 05:01:02 wer:331] predicted:wlA ttkbdwn h*h Alm$qp bmfrdkm mA qwlkm
+[NeMo I 2024-06-03 05:01:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:03 wer:330] reference:ElY Alrgm mn kl h*A f>nA AEtbr >n <drAk >wrwbA
+[NeMo I 2024-06-03 05:01:03 wer:331] predicted:ElY Alrgm mn kl h*A f>nA >Etbr >n <drAk >wrwbA
+[NeMo I 2024-06-03 05:01:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:03 wer:330] reference:tfwq sbEp mlyAr wnSf AlmlyAr dwlAr
+[NeMo I 2024-06-03 05:01:03 wer:331] predicted:tfwq mlyAr wnSf AlmlyAr dwlAr
+[NeMo I 2024-06-03 05:01:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:03 wer:330] reference:r}ys Almjls Al>wrwby stTrHwn mqtrHAt
+[NeMo I 2024-06-03 05:01:03 wer:331] predicted:>n l r}ys Almjls Al>wrwby stTrHwn mqtrHAt
+[NeMo I 2024-06-03 05:01:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:03 wer:330] reference:h*A mA >mlAh ElynA wAjbnA Al<nsAny wAl<slAmy wAlwjdAny
+[NeMo I 2024-06-03 05:01:03 wer:331] predicted:h*A mA >mlAh ElynA wAjbnA Al<nsAny wAl<slAmy wAlwjdAny
+[NeMo I 2024-06-03 05:01:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:04 wer:330] reference:bl wyEy$ Almqtdrwn mnhm fy kAfp Almdn Altrkyp fy AlmHAfZAt Altrkyp klhA
+[NeMo I 2024-06-03 05:01:04 wer:331] predicted:bl wyEy$ Almqtdrwn mnhm fy kAfp Almdn Altrkyp fy AlmHAfZAt Altrkyp klhA
+[NeMo I 2024-06-03 05:01:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:04 wer:330] reference:Als&Al hnA hl stmnEwn tdfq Almzyd mn AllAj}yn ElY >wrwbA
+[NeMo I 2024-06-03 05:01:04 wer:331] predicted:Als&Al hnA hl stmnEwn tdfq Almzyd mn AllAj}yn ElY >wrwbA
+[NeMo I 2024-06-03 05:01:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:04 wer:330] reference:Al*yn yhrbwn bHyAthm wAl*yn ytTlEwn lHyAp >fDl
+[NeMo I 2024-06-03 05:01:04 wer:331] predicted:Al*yn yhrbwn bHyAthm wAl*yn ytTlEwn lHyAp >fDl
+[NeMo I 2024-06-03 05:01:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:04 wer:330] reference:kAn fy trkyA nHw mlywn wsbEmA}p >lf swry lkn mqArbp Algrb fy h*A Al>mr sy}p jdA
+[NeMo I 2024-06-03 05:01:04 wer:331] predicted:kAn fy trkyA nHw mlywn w >lf swry lkn mqArbp Algrb fy h*A Al>mr sy}p jdA
+[NeMo I 2024-06-03 05:01:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:05 wer:330] reference:lst *AhbA llAtHAd Al>wrwby lEqd SfqAt
+[NeMo I 2024-06-03 05:01:05 wer:331] predicted:lst *AhbA llAtHAd Al>wrwby lEqd SfqAt
+[NeMo I 2024-06-03 05:01:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:05 wer:330] reference:lkn mHAwlAthm llmsjd Al>qSY h*h Almrp >kvr xbAvp w>kvr gdrA
+[NeMo I 2024-06-03 05:01:05 wer:331] predicted:lkn mHAwlAthm llmsjd Al>qSY h*h Almrp >kvr xbAvp w>kvr gdrA
+[NeMo I 2024-06-03 05:01:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:05 wer:330] reference:jrymp jdydp tDAf lm}At AljrA}m Alty qAmt bhA Dd Al$Eb AlflsTyny
+[NeMo I 2024-06-03 05:01:05 wer:331] predicted:jrymp jdydp tDAf lm}At AljrA}m Alty qAmt bhA Dd Al$Eb AlflsTyny
+[NeMo I 2024-06-03 05:01:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:06 wer:330] reference:l>n AlnAs sySbrwn lHd mEyn wbEdhA ln ySbrwA
+[NeMo I 2024-06-03 05:01:06 wer:331] predicted:l>n AlnAs sySdrwn lHd mEyn wbEdhA ln ySbrwA
+[NeMo I 2024-06-03 05:01:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:06 wer:330] reference:ws>bqY >tHdv <lyhm
+[NeMo I 2024-06-03 05:01:06 wer:331] predicted:ws>bqY >tHdv <lyhm
+[NeMo I 2024-06-03 05:01:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:06 wer:330] reference:wAtfqnA ElY AlqyAm bkl mA ymkn AlqyAm bh fy h*A AlmwDwE
+[NeMo I 2024-06-03 05:01:06 wer:331] predicted:wAtfqnA ElY AlqyAm bkl mA ymkn AlqyAm bh fy h*A AlmwDwE
+[NeMo I 2024-06-03 05:01:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:06 wer:330] reference:wlm yrfEwA AlHSAr En AlflsTynyyn
+[NeMo I 2024-06-03 05:01:06 wer:331] predicted:wlm yrfEwA AlHSAr En AlflsTynyyn
+[NeMo I 2024-06-03 05:01:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:07 wer:330] reference:wAljAmEp AlErbyp lm tqm bwAjbhA Al*y yqE ElY EAtqhA fy >y wqt mn Al>wqAt
+[NeMo I 2024-06-03 05:01:07 wer:331] predicted:wAljAmEp AlErbyp lm tqm bwAjbhA Al*y yqE ElY EAtqhA fy >y wqt mn Al>wqAt
+[NeMo I 2024-06-03 05:01:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:07 wer:330] reference:<lY tqyym Almwqf AlErby fymA ytElq bmA yHdv
+[NeMo I 2024-06-03 05:01:07 wer:331] predicted:<lY tqyym Almwqf AlErby fymA ytElq bmA yHdv
+[NeMo I 2024-06-03 05:01:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:08 wer:330] reference:mA lm yrfE AlZlm AlmmArs En mHmd mrsy w>SdqA}h h*A mn mqtDyAt AlmnSb Al*y >mvlh
+[NeMo I 2024-06-03 05:01:08 wer:331] predicted:lm yrfE AlZlm AlmmArs ElY mHmd mrsy w>SdqA}h h*A mn mqtDyAt AlmnSb Al*y >mvlh
+[NeMo I 2024-06-03 05:01:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:08 wer:330] reference:l>n mrsy Al*y Erfth wAl*y tEAmlt mEh lys mrsy Al*y yHAwlwn Altrwyj Enh fy AdEA'Athm
+[NeMo I 2024-06-03 05:01:08 wer:331] predicted:l>n mrsy Al*y Erfth wAl*y tEAmlt mEh lys mrsy Al*y yHAwlwn Altrwyj Enh fy AdEA'Athm
+[NeMo I 2024-06-03 05:01:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:08 wer:330] reference:Alty ElY w$k >n tnf* >HkAm <EdAmhA
+[NeMo I 2024-06-03 05:01:08 wer:331] predicted:Alty ElY w$k >n tnf* >HkAm <EdAmhA
+[NeMo I 2024-06-03 05:01:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:08 wer:330] reference:w>n nbyE lmSr bDA}E llHSwl ElY AldwlArAt hmnA hw t>sys AlEdl fy AlEAlm
+[NeMo I 2024-06-03 05:01:08 wer:331] predicted:w>n nbyE lmSr bDA}E llHSwl ElY AldwlArAt hmnA hw t>sys AlEdl fy AlEAlm
+[NeMo I 2024-06-03 05:01:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:09 wer:330] reference:t$kw mn >n AlTA}rAt Altrkyp Alty tgyr ElY mwqE Hzb AlEmAl AlkrdstAny fy
+[NeMo I 2024-06-03 05:01:09 wer:331] predicted:t$kw mn >n AlTA}rAt Altrkyp Alty tgyr ElY mwAqE Hzb AlEmAl AlkrdstAny fy
+[NeMo I 2024-06-03 05:01:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:09 wer:330] reference:lsnwAt TwAl wnHn nqwl lhm wjhp nZrnA h*h
+[NeMo I 2024-06-03 05:01:09 wer:331] predicted:lsnwAt TwAl wnHn nqwl lhm wjhp nZrnA h*h
+[NeMo I 2024-06-03 05:01:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:09 wer:330] reference:l>nnA nxlShm mn drn Al<rhAb AnZrwA <lY dAE$ jA't llErAq wtrbEt fyhA
+[NeMo I 2024-06-03 05:01:09 wer:331] predicted:l>nnA nxlShm mn *rn Al<rhAb AnZrwA <lY dAE$ jA't llErAq wtrbEt fyhA
+[NeMo I 2024-06-03 05:01:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:10 wer:330] reference:qAl bAlHrf AlwAHd >n hnAk <rhAbyyn
+[NeMo I 2024-06-03 05:01:10 wer:331] predicted:qAl bAlHrf AlwAHd >n hnAk <rhAbyyn
+[NeMo I 2024-06-03 05:01:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:10 wer:330] reference:lmA*A l>n HdwdnA tHt Althdyd fy sbyl HmAyp HdwdnA mE swryA
+[NeMo I 2024-06-03 05:01:10 wer:331] predicted:lmA*A l>n HdwdnA tHt Althdyd fy sbyl HmAyp HdwdnA mE swryA
+[NeMo I 2024-06-03 05:01:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:10 wer:330] reference:qlt <nkm fy tHAlf mE AlwlAyAt AlmtHdp llqDA' ElY Alb&r Al<rhAbyp Alty ymvlhA tnZym Aldwlp dAxl swryA
+[NeMo I 2024-06-03 05:01:10 wer:331] predicted:qlt <nkm fy tHAlf mE AlwlAyAt AlmtHdp llqDA' ElY Alb&r Al<rhAbyp Alty ymvlhA tnZym Aldwlp dAxl swryA
+[NeMo I 2024-06-03 05:01:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:10 wer:330] reference:wmA nSfhm bfSA}l AlmEArDp AlmEtdlp tEAmlnA mEhm wntEAml wsntEAml
+[NeMo I 2024-06-03 05:01:10 wer:331] predicted:wmA nSfhm bfSA}l AlmEArDp AlmEtdlp tEAmlnA mEhm wntEAml wsntEAml
+[NeMo I 2024-06-03 05:01:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:11 wer:330] reference:hl tTlb mny >n >qwl >mwrA gyr SHyHp >mwrA kA*bp lky nbdw b$kl >fDl llgyr
+[NeMo I 2024-06-03 05:01:11 wer:331] predicted:hl tTlb mny >n >qwl >mwrA gyr SHyHp >mwrA kA*bp lky nbdw b$kl >fDl llgyr
+[NeMo I 2024-06-03 05:01:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:11 wer:330] reference:Al<slAm dyn AlslAm lkn dAE$ lA ElAqp lhA bAlslAm wgyrh
+[NeMo I 2024-06-03 05:01:11 wer:331] predicted:Al<slAm dyn AlslAm lkn dAE$ lA ElAqp lhA bAlslAm wgyrh
+[NeMo I 2024-06-03 05:01:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:11 wer:330] reference:nHn wSlnA lmA wSlnA <lyh mn xlAl AlHSwl ElY Al>SwAt fy <TAr mn AldymqrATyp
+[NeMo I 2024-06-03 05:01:11 wer:331] predicted:nHn wSlnA lmA wSlnA <lyh mn xlAl AlHSwl ElY Al>SwAt fy <TAr mn AldymqrATyp
+[NeMo I 2024-06-03 05:01:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:12 wer:330] reference:mmA tsbb fy mqtl xmsyn $xSA Almqtwl kAn krdyA wAlqAtl kAn krdyA >yDA
+[NeMo I 2024-06-03 05:01:12 wer:331] predicted:mmA tsbb fy mqtl $xSA Almqtwl kAn krdyA wAlqAtl kAn krdyA >yDA
+[NeMo I 2024-06-03 05:01:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:12 wer:330] reference:h*h hy AlHqyqp
+[NeMo I 2024-06-03 05:01:12 wer:331] predicted:h*h hy AlHqyqp
+[NeMo I 2024-06-03 05:01:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:12 wer:330] reference:strwn km yHSl ElY nsb >SwAt
+[NeMo I 2024-06-03 05:01:12 wer:331] predicted:strwn km yHSl ElY nsb >SwAt
+[NeMo I 2024-06-03 05:01:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:13 wer:330] reference:ElynA >n njEl AltdAbyr fy >ElY mstwY lky lA nwAjh bm$Akl >vnA' AlAntxAbAt
+[NeMo I 2024-06-03 05:01:13 wer:331] predicted:ElynA >n njEl AltdAbyr fy >ElY mstwY lky lA nwAjh bm$Akl >vnA' AlAntxAbAt
+[NeMo I 2024-06-03 05:01:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:13 wer:330] reference:>nA lst zEym Hzb >nA r}ys lljmhwryp
+[NeMo I 2024-06-03 05:01:13 wer:331] predicted:>nA lst zEym Hzb >nA r}ys lljmhwryp
+[NeMo I 2024-06-03 05:01:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:13 wer:330] reference:hnA nHn bHAjp ltrkyA qwyp tHkmhA Hkwmp qwyp
+[NeMo I 2024-06-03 05:01:13 wer:331] predicted:hnA nHn bHAjp ltrkyA qwyp tHkmhA Hkwmp qwyp
+[NeMo I 2024-06-03 05:01:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:13 wer:330] reference:lA >smH l>Hd >n yqf EA}qA byny wbyn mwATny
+[NeMo I 2024-06-03 05:01:13 wer:331] predicted:lA >smH l>Hd >n yqf EA}qA byny wbyn mwATny
+[NeMo I 2024-06-03 05:01:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:14 wer:330] reference:fkmA *hbt lmwATny mn Ajl AlHSwl ElY >SwAthm lr}Asp Aljmhwryp
+[NeMo I 2024-06-03 05:01:14 wer:331] predicted:fkmA *hbt lmwATnyn mn >jl AlHSwl ElY >SwAthm lr}Asp Aljmhwryp
+[NeMo I 2024-06-03 05:01:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:14 wer:330] reference:mnhm AlmrHwm twrbwt >wzAl wAlmrHwm slymAn dmryl
+[NeMo I 2024-06-03 05:01:14 wer:331] predicted:mnhm AlmrHwm trbp >wzAl wAlmrHwm slymAn dymyryl
+[NeMo I 2024-06-03 05:01:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:14 wer:330] reference:Hyv nwASl AlAstmAE <lY $hAdp Al<mAm AlSAdq Almhdy
+[NeMo I 2024-06-03 05:01:14 wer:331] predicted:Hyv nwASl AlAstmAE <lY $hAdp Al<mAm AlSAdq Almhdy
+[NeMo I 2024-06-03 05:01:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:15 wer:330] reference:bEd Aljzyrp |bA l>nh bEd mjzrp Aljzyrp |bA
+[NeMo I 2024-06-03 05:01:15 wer:331] predicted:bEd Aljzyrp >bA l>nh bEd mjzrp Aljzyrp >bA
+[NeMo I 2024-06-03 05:01:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:15 wer:330] reference:wdxl fy Emlyp dfAE m$trk mE mSr AlsAdAt
+[NeMo I 2024-06-03 05:01:15 wer:331] predicted:wdxl fy Emlyp dfAE m$trk mE mSr AlsAdAt
+[NeMo I 2024-06-03 05:01:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:15 wer:330] reference:mA >hdAf Hlf Ef Edn h*A Hlf Edn kAn >SlA mwjh Dd AlHlf Algrby
+[NeMo I 2024-06-03 05:01:15 wer:331] predicted:mA >hdAf Hlf f Edn h Hlf Edn kAn >SlA mwjh Dd AlHlf Algrby
+[NeMo I 2024-06-03 05:01:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:16 wer:330] reference:AlEqyd Alq*Afy wHkwmth swf ydEmwn AlmEArDp AlswdAnyp
+[NeMo I 2024-06-03 05:01:16 wer:331] predicted:Etyd Alq*Afy wHkwmth swf ydEmwn AlmEArDp AlswdAnyp
+[NeMo I 2024-06-03 05:01:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:16 wer:330] reference:wAljbhp Al<slAmyp Alqwmyp fy *lk Alwqt EndmA kAnt tsmY *lk lkn
+[NeMo I 2024-06-03 05:01:16 wer:331] predicted:wAljbhp Al<slAmyp Alqwmyp fy *lk Alwqt kmA kAnt tsmY *lk lkn
+[NeMo I 2024-06-03 05:01:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:17 wer:330] reference:fTlbwA mn Al>x bAbkr krAr >n yktb lhm m*krp En AlqwY AlsyAsyp AlswdAnyp
+[NeMo I 2024-06-03 05:01:17 wer:331] predicted:fqd TlbwA mn Al>x mA by$ qrAr >n yktb lhm m*krp En AlqwY AlsyAsyp AlswdAnyp
+[NeMo I 2024-06-03 05:01:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:17 wer:330] reference:Alfkrp kAnt >n Alnmyry bEd HwAdv $EbAn
+[NeMo I 2024-06-03 05:01:17 wer:331] predicted:kAnt >n Alnmyry bEd HwAdv $EbAn
+[NeMo I 2024-06-03 05:01:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:17 wer:330] reference:qwp Eskryp tqSd Eskryp wdEm mn AlxArj kbyr Al*y zAd mn qwthA
+[NeMo I 2024-06-03 05:01:17 wer:331] predicted:qwp Eskryp Eskryp wdEm AlxArj kbyr Al*y zAd mn qwthA
+[NeMo I 2024-06-03 05:01:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:18 wer:330] reference:lkn fy AlmrHlp AlvAnyp mA dxlwA kAn lkn >nt qlt ly <n HtY AlslAH Al*y >rslwh wAldEm lm ySl lm ySl
+[NeMo I 2024-06-03 05:01:18 wer:331] predicted:lkn fy AlmrHlp AlvAnyp mA dxlwA lkn >nt qlt ly >n HtY AlslAH Al*y >wSlwh wAldEm lm ylm ySl
+[NeMo I 2024-06-03 05:01:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:18 wer:330] reference:wsAfr Aldktwr Emr l$wqdwm fy dAxl Aljnwb nEm
+[NeMo I 2024-06-03 05:01:18 wer:331] predicted:wsAfr Aldktwr Emr l$q dwm fy dAxl Aljnwb
+[NeMo I 2024-06-03 05:01:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:18 wer:330] reference:wkAnt Alfkrp >n h*A hw Al
+[NeMo I 2024-06-03 05:01:18 wer:331] predicted:wkAnt Alfkrp >n h*A hw
+[NeMo I 2024-06-03 05:01:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:19 wer:330] reference:fy >smrA whnAlk kwnwA Al
+[NeMo I 2024-06-03 05:01:19 wer:331] predicted:whnAlk kwnwA
+[NeMo I 2024-06-03 05:01:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:19 wer:330] reference:Al$y' Al*y x*lnA hw >n AlfSyl AlEskry knA mtfqyn mE bED AlEskryyn
+[NeMo I 2024-06-03 05:01:19 wer:331] predicted:Al>$yA' Alty x*lnA hw >n AlfSyl AlEskry knA mtfqyn mE bED AlEskryyn
+[NeMo I 2024-06-03 05:01:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:19 wer:330] reference:wlA lh ElAqp bhm nEm mA lh ElAqp
+[NeMo I 2024-06-03 05:01:19 wer:331] predicted:wlA lh ElAqp bhm nEm mA lw lA
+[NeMo I 2024-06-03 05:01:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:20 wer:330] reference:wEmr nwr AldAym mn Hzb Al>mp Ez Aldyn Ely EAmr mn AlHzb Al$ywEy >bw bkr EwD m*yE fy Al<*AEp
+[NeMo I 2024-06-03 05:01:20 wer:331] predicted:wEmr nwr Aldyn mn Hzb Al>mp Ez Aldyn Ely Emr mn Hzb Al$ywEy >bw bkr EwD m*Af Al<*AEp
+[NeMo I 2024-06-03 05:01:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:20 wer:330] reference:wntyjp l*lk >mkn AHtwA' Al
+[NeMo I 2024-06-03 05:01:20 wer:331] predicted:wntyjp l*lk >mkn AHtwA'
+[NeMo I 2024-06-03 05:01:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:20 wer:330] reference:nEm lkn qbl kdA fy Atnyn fbrAyr stp wsbEyn >Sdrtm mA ysmY bAlmyvAq AlwTny
+[NeMo I 2024-06-03 05:01:20 wer:331] predicted:nEm lkn qblk dh fy fbrAyr >Sdrtm mA ysmY bAlmyvAq AlwTny
+[NeMo I 2024-06-03 05:01:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:21 wer:330] reference:bdEm mn mEmr Alq*Afy wDbAT mn Aljy$ AlswdAny fy AldAxl sy$Arkwn mEkm
+[NeMo I 2024-06-03 05:01:21 wer:331] predicted:bdEm mn mEmr Alq*Afy wDbAT mn Aljy$ AlswdAny fy AldAxl sy$Arkwn mEkm
+[NeMo I 2024-06-03 05:01:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:21 wer:330] reference:<lY dAxl AlEASmp wqd tm h*A bkfA'p EAlyp wZlwA mwjwdyn dAxl AlEASmp
+[NeMo I 2024-06-03 05:01:21 wer:331] predicted:<lY dAxl AlEASmp wqd tm h*A bkfA'p EAlyp wZlwA mwjwdyn dAxl AlEASmp
+[NeMo I 2024-06-03 05:01:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:22 wer:330] reference:fy dAxl AlEASmp Ally hy <yh AlmfASl bqY AlqyAdAt
+[NeMo I 2024-06-03 05:01:22 wer:331] predicted:fy dAxl AlEASmp Ally hy <l A mfASl bhA l>nh AlqyAdAt
+[NeMo I 2024-06-03 05:01:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:22 wer:330] reference:hm swf yxrjwn <lY Hyv AlslAH whnAk ystlmwn slAHhm
+[NeMo I 2024-06-03 05:01:22 wer:331] predicted:hm swf yxrjwn <lY Hyv AlslAH whnAk ystlmwn slAHhm
+[NeMo I 2024-06-03 05:01:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:22 wer:330] reference:kAnwA lAbsyn zy mdny dh xlY AlnZAm yqdr yqwl h&lA' mrtzqp
+[NeMo I 2024-06-03 05:01:22 wer:331] predicted:kAnwA lAbsyn zy mdny mdny dh xlY AlnZAm yqdr yqwl h&lA' mrtzqp
+[NeMo I 2024-06-03 05:01:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:23 wer:330] reference:>n y$trkwA mEnA yEny ybqY lyhm qwAt tdxl mEAkm nEm >n y$trkwA mEnA bAlTyrAn wbgyrh >nA rfDt h*A
+[NeMo I 2024-06-03 05:01:23 wer:331] predicted:>n y$trkwA mEnA yEny ybqY Elyhm qwAt tdxl mEkm nEm >n y$trkwA mEnA bAlTyrAn wbgyrh >nA rfDt h*A
+[NeMo I 2024-06-03 05:01:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:23 wer:330] reference:Almrtzqp Alq*Afy qAlh wAllh h&lA' >$rf nAs nHn drbnA nAs kvyryn
+[NeMo I 2024-06-03 05:01:23 wer:331] predicted:Almrtzqp Alq*Afy qAl lh wAllh h&lA' >$rf nAs <HnA drbnA nAs kvyryn
+[NeMo I 2024-06-03 05:01:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:23 wer:330] reference:mA kAnt m$klp w>n Al<*AEp kAnt qAflp >ywh Alm$klp klhA >nh h&lA' yEny >nA kAn klAmy ll
+[NeMo I 2024-06-03 05:01:23 wer:331] predicted:A mA kAnt m$klp w<n Al<*AEp kAnt >flA >yh Alm$klp klhA >n h&lA' yEny >nA kAn klAmy
+[NeMo I 2024-06-03 05:01:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:24 wer:330] reference:Alty >f$lt Alm$rwE EbArp >n h&lA' mrtzqp
+[NeMo I 2024-06-03 05:01:24 wer:331] predicted:Alty >f$lt Alm$rwE EbArp >n h&lA' mrtzqp
+[NeMo I 2024-06-03 05:01:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:24 wer:330] reference:<lY jAnb qwAt >w mjmwEAt tHrkt mn AlTlbp wmn Aljy$ brDh fy AlswdAn
+[NeMo I 2024-06-03 05:01:24 wer:331] predicted:<lY jAnb qwAt >w mjmwEAt Hrkt mn AlTlbp wmn Aljy$ brDh fy AlswdAn
+[NeMo I 2024-06-03 05:01:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:24 wer:330] reference:ElY r>shm mHmd nwr sEd nEm nEm ElY kl HAl Alfkrp klhA >nh knA nEtqd
+[NeMo I 2024-06-03 05:01:24 wer:331] predicted:ElY r>shm mHmd mrsy nEm nEm ElY kl HAl Alfkrp klhA >nh knA nEtqd
+[NeMo I 2024-06-03 05:01:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:25 wer:330] reference:dktwr Hsn mky fy SfHp sbEp wE$ryn mn ktAbh En AlHrkp Al<slAmyp qAyl HAjp En AlAnqlAbAt jmylp jdA
+[NeMo I 2024-06-03 05:01:25 wer:331] predicted:dktwr Hsn mky fy lSfHp mn ktAbh En AlHrkp Al<slAmyp >y AlHAjp En AlAnqlAbAt jmylp jdA
+[NeMo I 2024-06-03 05:01:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:25 wer:330] reference:snd $Eby kbyr Alm$klp fy r>yy m$A} msA}l fnyp
+[NeMo I 2024-06-03 05:01:25 wer:331] predicted:snd $Eby kbyr Alm$klp fy r>yy msA}l fnyp
+[NeMo I 2024-06-03 05:01:25 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:25 wer:330] reference:nEm nEm mA hw klhm >SlA kAnt klhA AxtyAryp mA kAn fyhA
+[NeMo I 2024-06-03 05:01:25 wer:331] predicted:nEm hm klhm >SlA h y kAnt klhA AxtyAryp mA kAn fyhA
+[NeMo I 2024-06-03 05:01:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:26 wer:330] reference:Al*yn mEnA kAnwA mA wqE Al>mr Elyk mfAj>p Hzynp jdA
+[NeMo I 2024-06-03 05:01:26 wer:331] predicted:Al*yn mEnA kAnwA fy wAqE Al>mr Elyk mfAj>p Hzynp jdA
+[NeMo I 2024-06-03 05:01:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:26 wer:330] reference:wbAlfEl hw dA >SlA Alsbb Al*y >dY llmSAlHp mA kAn mmkn tHSl mSAlHp
+[NeMo I 2024-06-03 05:01:26 wer:331] predicted:wbAlfEl hw dh >SlA Alsbb Al*y >dY llmSAlHp mA kAn mmkn >n tHSl AlmSAlHp
+[NeMo I 2024-06-03 05:01:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:27 wer:330] reference:Al|n >x* yzAyd ElY Al<slAmyyn wbd> ySbH >myr Alm&mnyn
+[NeMo I 2024-06-03 05:01:27 wer:331] predicted:Al|n >x* yzAyd ElY Al<slAmyyn wbd> ySbH >myr Alm&mn
+[NeMo I 2024-06-03 05:01:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:27 wer:330] reference:>ntm btdEw <lY <yh yA Hzb Al>mp >nt btdEw <lY <yh Hsn AltrAby >ntm btdEw <lY <yh yA <xwAn mslmyn >nA >Hsn mnkm >nA >Tbq wfy ydy AlslTp
+[NeMo I 2024-06-03 05:01:27 wer:331] predicted:>ntm tdEw <yh Hzb Al>mp >nt tdEw <yh Hsn AltrAby >ntm tdEw yA <xwAn Almslmyn >nA >Hsn mnk w>nA bTbq wydy AlslTp
+[NeMo I 2024-06-03 05:01:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:27 wer:330] reference:trtb lAnqlAb |xr nkrr >ywh Almhmp fhw kAn yElm *lk
+[NeMo I 2024-06-03 05:01:27 wer:331] predicted:trtb AlAnqlAb |xr >n nkrr >yh Almhmp fhw kAn yElm *lk
+[NeMo I 2024-06-03 05:01:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:28 wer:330] reference:AlwTnyp AlmEnyp whnAk wAfqwA
+[NeMo I 2024-06-03 05:01:28 wer:331] predicted:AlwTnyp AlmEnyp whnAk twAfq
+[NeMo I 2024-06-03 05:01:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:28 wer:330] reference:wAl*y lkn myEAd AllqA' nfsh mA >xbrthm lA myEAd AllqA' lA lmA*A lm txbrhm bh l>nh mA knA fy mkAn wAHd
+[NeMo I 2024-06-03 05:01:28 wer:331] predicted:wAl*y lkn mA EAd AllqA' nfshm >fDAl l mA EAd AllqA' lmA*A lm txbrhm hA l>nh mA knA fy mkAn wAHd
+[NeMo I 2024-06-03 05:01:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:28 wer:330] reference:w<mA >n tHqq ntA}j llmSAlHp nEm nEm
+[NeMo I 2024-06-03 05:01:28 wer:331] predicted:w<mA >n tHqq ntA}j llmSAlHp nEm nEm m
+[NeMo I 2024-06-03 05:01:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:29 wer:330] reference:b*At wdqyn lA yEfw lhA >vr >nA EArf kdA
+[NeMo I 2024-06-03 05:01:29 wer:331] predicted:b*At wtqyny lA yEfw lhA >vr w>nA >Erf krA
+[NeMo I 2024-06-03 05:01:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:29 wer:330] reference:wlA kAn fy HAjz nfsy bynk wbynh bd>t bHAjz nfsy wklAm fyh
+[NeMo I 2024-06-03 05:01:29 wer:331] predicted:wlA kAn fy HAjz nfsy bynk wbyn Am bd>t bHAjz nfsy wklAm fyh
+[NeMo I 2024-06-03 05:01:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:30 wer:330] reference:tmArs HqhA fy Zl h*A AltTwr AldymqrATy
+[NeMo I 2024-06-03 05:01:30 wer:331] predicted:tmArs HqhA fy Zl h*A AltTwr AldymqrATy
+[NeMo I 2024-06-03 05:01:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:30 wer:330] reference:>n h*A >fDl lh mn AstmrAr AlmwAjhp
+[NeMo I 2024-06-03 05:01:30 wer:331] predicted:>n h*A >fDl lh mn AstmrAr AlmwAjhp
+[NeMo I 2024-06-03 05:01:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:30 wer:330] reference:HAwl yEml HAjp smAhA Ast}nAs Al>nSAr
+[NeMo I 2024-06-03 05:01:30 wer:331] predicted:HAwl yEml HAjp ysmhA Ast}nAs Al>nSAr
+[NeMo I 2024-06-03 05:01:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:30 wer:330] reference:wqAl ly hAk h*h >mlAkkm >mlAk |l Almhdy >mlAk dA}rp Almhdy nEm
+[NeMo I 2024-06-03 05:01:30 wer:331] predicted:wqAl ly hAk h*h >mlkk >mlk <lY Almhd >mlAk dA}rp Almhdrp
+[NeMo I 2024-06-03 05:01:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:31 wer:330] reference:l>nh nHn kAnt fy *lk Alwqt Alms>lp mwrwvp mA fy Hd wAHd bymvl AlnAs klhm
+[NeMo I 2024-06-03 05:01:31 wer:331] predicted:l>nh nHnA kAnt fy *lk Alwqt Alms>lp mwrwvp mA fy Hd wAHd ymvlA AlnAs klhm
+[NeMo I 2024-06-03 05:01:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:31 wer:330] reference:kAn qd EmrhA h*h Aljzyrp >bA lA twrv
+[NeMo I 2024-06-03 05:01:31 wer:331] predicted:kAn qd EmrhA h*h Aljzyrp >bA lA twrv
+[NeMo I 2024-06-03 05:01:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:31 wer:330] reference:w>n byt Almhdy lA ywzE fy Alwrvp lkn bqyp Al>Swl
+[NeMo I 2024-06-03 05:01:31 wer:331] predicted:w>n byt Almhdy lA ywzE fy Alwrvp lkn bqyp Al>Swl
+[NeMo I 2024-06-03 05:01:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:32 wer:330] reference:wAfqwA nEm klhm klhm dwn AEtrADAt dwn AEtrADAt bl
+[NeMo I 2024-06-03 05:01:32 wer:331] predicted:wAfqwA nEm klhm EDwn AEtrADAt bl
+[NeMo I 2024-06-03 05:01:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:32 wer:330] reference:Endh AEtrAD ElY >y HAl >nA knt lsh H>qwl lk Alq*Afy bEd kl <ly Emlh mEAkm
+[NeMo I 2024-06-03 05:01:32 wer:331] predicted:Endh AEtrAD ElY >y HAl mA >nt lsh s>qwl lk f Alq*Afy bEd kl Ally EmlwA mEkm
+[NeMo I 2024-06-03 05:01:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:32 wer:330] reference:vlAv mrAt
+[NeMo I 2024-06-03 05:01:32 wer:331] predicted:vlAv mrAt
+[NeMo I 2024-06-03 05:01:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:33 wer:330] reference:zArny Alsyd jEfr Alnmyry
+[NeMo I 2024-06-03 05:01:33 wer:331] predicted:zArny Alsyd jHfr Alnmyry
+[NeMo I 2024-06-03 05:01:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:33 wer:330] reference:tsEp wsbEyn >Zn fy snp tmAnyn tmAnyn Almhm >ywh fqAl ly
+[NeMo I 2024-06-03 05:01:33 wer:331] predicted:tsE wsbEyn >Zn fy snp vnyn Almhm >ywh fqAl ly
+[NeMo I 2024-06-03 05:01:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:33 wer:330] reference:wxrj Elyhm An$q Elyhm AnDm llAtHAd AlA$trAky >nt AnDmyt llAtHAd AlA$trAky kmAn
+[NeMo I 2024-06-03 05:01:33 wer:331] predicted:wxrj Elyhm mn An$q Elyh mn Dm llAtHAd AlA$trAky Ant Dmt Al<tHAd AlA$trAky kmAn
+[NeMo I 2024-06-03 05:01:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:34 wer:330] reference:kAn mn Dmn AlAtfAq mE Alnmyry
+[NeMo I 2024-06-03 05:01:34 wer:331] predicted:kAn mn Dmn AlAtfAq mE Alnmyry
+[NeMo I 2024-06-03 05:01:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:34 wer:330] reference:tEAl wsnHqq Al<SlAHAt AlmTlwbp mn h*A Almnbr dxlt
+[NeMo I 2024-06-03 05:01:34 wer:331] predicted:tEAl wsnHqq Al<SlAHAt AlmTlwbp mn h*A Almnbr dxlt
+[NeMo I 2024-06-03 05:01:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:34 wer:330] reference:wbEdhA gAdrt AlswdAn mHbTA fy dysmbr tsEp wsbEyn SH nEm
+[NeMo I 2024-06-03 05:01:34 wer:331] predicted:wbEdhA gAdrt AlswdAn mHbTA fy dysmbr SH nEm
+[NeMo I 2024-06-03 05:01:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:35 wer:330] reference:wh*A >Hmd mnSwr yHyykm wAlslAm Elykm wrHmp Allh wbrkAth
+[NeMo I 2024-06-03 05:01:35 wer:331] predicted:wh*A >Hmd mnSwr yHyykm wAlslAm Elykm wrHmp Allh wbrkAth
+[NeMo I 2024-06-03 05:01:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:35 wer:330] reference:lm ybd AlTrfAn Alrwsy wAlmSry HmAsp lqbwl tbny tnZym Aldwlp Al<slAmyp <sqAT TA}rp AlrkAb Alrwsyp mn TrAz <yrbAS
+[NeMo I 2024-06-03 05:01:35 wer:331] predicted:lm ybd AlTrfAn Alrwsy wAlmSry HmAsp lqbwl tbny tnZym Aldwlp Al<slAmyp <sqAT TA}rp AlrkAb Alrwsyp mn TrAz <yrbAS
+[NeMo I 2024-06-03 05:01:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:35 wer:330] reference:wvmp qryb qtl whw mn lHm wdm w*kryAt
+[NeMo I 2024-06-03 05:01:35 wer:331] predicted:wvmp qryb qtl whw mn lHm wdm w*kryAt
+[NeMo I 2024-06-03 05:01:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:35 wer:330] reference:fyhrE tnZym Aldwlp Al<slAmyp fy synA' ltbny AlHAdv
+[NeMo I 2024-06-03 05:01:35 wer:331] predicted:fyhrE tnZym Aldwlp Al<slAmyp fy synA' ltbny AlHAdv
+[NeMo I 2024-06-03 05:01:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:36 wer:330] reference:why kmA t&kd Al$rkp nfshA
+[NeMo I 2024-06-03 05:01:36 wer:331] predicted:why kmA t&kd Al$rkp nfshA A
+[NeMo I 2024-06-03 05:01:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:36 wer:330] reference:wmn *lk synAryw AntqAm tnZym Aldwlp mn Alrws ElY xlfyp tdxlhm fy swryA
+[NeMo I 2024-06-03 05:01:36 wer:331] predicted:wmn *lk synAryw AntqAm tnZym Aldwlp mn Alrws ElY xlfyp tdxlhm fy swryA
+[NeMo I 2024-06-03 05:01:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:36 wer:330] reference:>yA ykn Al>mr f<n vmp qtlY rwsA syEwdwn fy >kfAnhm <lY bldAthm
+[NeMo I 2024-06-03 05:01:36 wer:331] predicted:>yA ykwn Al>mr f<n vmp qtlY rwsA syEwdwn fy >kfAnhm <lY bldAthm
+[NeMo I 2024-06-03 05:01:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:37 wer:330] reference:>y mmkn yEny tnZym Aldwlp Hqyqp swA' kAn frEh fy synA' >w Aldwlp Almrkz fy AlErAq wswryA
+[NeMo I 2024-06-03 05:01:37 wer:331] predicted:>y mmkn yEny tnZym Aldwlp Hqyqp swA' kAn frEh fy synA' >w dwlp Almrkz fy AlErAq wswryA
+[NeMo I 2024-06-03 05:01:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:37 wer:330] reference:tHZY bmSdAqyp <lY Hd kbyr yEny
+[NeMo I 2024-06-03 05:01:37 wer:331] predicted:>n tHZY bmSdAqyp <lY Hd kbyr yEny
+[NeMo I 2024-06-03 05:01:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:37 wer:330] reference:Al>dlp AljnA}yp mn mwqE tHTm AlTA}rp
+[NeMo I 2024-06-03 05:01:37 wer:331] predicted:Al>dlp AljnA}yp mn mwqE tHTm AlTA}rp
+[NeMo I 2024-06-03 05:01:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:38 wer:330] reference:AlTA}rp <*A mA kAn hnAlk AxtrAq >mny fy $rm Al$yx >w hnAk AHtmAl
+[NeMo I 2024-06-03 05:01:38 wer:331] predicted:AlTA}rp <*A mA kAn hnAk AxtrAq >mny fy $rm Al$yx >w hnAk AHtmAl
+[NeMo I 2024-06-03 05:01:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:38 wer:330] reference:bsrEp b<SdAr Al<ElAn wlkn h*A lys AlEAml
+[NeMo I 2024-06-03 05:01:38 wer:331] predicted:bsrEp b<SdAr Al<ElAn wlkn h*A lys AlEAml
+[NeMo I 2024-06-03 05:01:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:38 wer:330] reference:bfEl Altdxl AlEskry Alrwsy tjd kvyrA mn Al$bAn AlmtsrEyn
+[NeMo I 2024-06-03 05:01:38 wer:331] predicted:bfEl Altdxl AlEskry Alrwsy tjd kvyrA mn Al$bAn AlmtsrEyn
+[NeMo I 2024-06-03 05:01:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:38 wer:330] reference:wtEy$ >kvr mn *lk Edd mn AlqtlY ywmyA
+[NeMo I 2024-06-03 05:01:38 wer:331] predicted:wtEy$ >kvr mn *lk Edd mn AlqtlY ywmyA
+[NeMo I 2024-06-03 05:01:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:39 wer:330] reference:HZy bhA tnZym AlqAEdp bEd EmlyAt AlHAdy E$r mn sbtmbr mn kvyr mn Almslmyn Al*yn lA ywAfqwn ElY >Sl AlEmlyAt
+[NeMo I 2024-06-03 05:01:39 wer:331] predicted:HZy bhA tnZym AlqAEdp bEd EmlyAt AlHAdy E$r mn sbtmbr mn kvyr mn Almslmyn Al*yn lA ywAfqwn ElY >Sl EmlyAt
+[NeMo I 2024-06-03 05:01:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:39 wer:330] reference:DHAyA mn Almdnyyn wAlnsA' wAl>TfAl >kvr mn Edd qtlY AlTA}rp Al*yn sqTwA wh*A AlEml wAn kAn gyr mqbwlA
+[NeMo I 2024-06-03 05:01:39 wer:331] predicted:DHAyA mn Almdnyyn wAlnsA' wAl>TfAl >kvr mn Edd qtlY AlTA}rp Al*yn sqTwA wh*A hw Eml w<n kAn gyr mqbwlA
+[NeMo I 2024-06-03 05:01:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:39 wer:330] reference:EndmA bd>t AlEmlyp Alrwsyp fy swryA kAn hnAk kvyr mn Alqlq
+[NeMo I 2024-06-03 05:01:39 wer:331] predicted:EndmA bd>t AlEmlyp Alrwsyp fy swryA kAn hnAk kvyr mn Alqlq
+[NeMo I 2024-06-03 05:01:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:40 wer:330] reference:qTAE AlsyAHp wy&vr Elyh slbA
+[NeMo I 2024-06-03 05:01:40 wer:331] predicted:qTAE AlsyAHp wy&vr Elyh slbA
+[NeMo I 2024-06-03 05:01:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:40 wer:330] reference:>rjw mnkmA >n tbqyA mEy fASl qSyr m$AhdynA Al>EzA' nnAq$ bEdh t>vyrAt tbny tnZym Aldwlp
+[NeMo I 2024-06-03 05:01:40 wer:331] predicted:>rjw mnkm >n tbqwA mEy fASl qSyr m$AhdynA Al>EzA' nnAq$ bEdh t>vyrAt tbny tnZym Aldwlp
+[NeMo I 2024-06-03 05:01:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:40 wer:330] reference:bEd HAdv kh*A <*A >vbt AlSndwqAn Al>swdAn >n hnAk
+[NeMo I 2024-06-03 05:01:40 wer:331] predicted:bEd HAdv kh*A <*A >vbt AlSndqAn Al>swdAn >n hnAk
+[NeMo I 2024-06-03 05:01:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:41 wer:330] reference:Hmlp dEA}yp jdyp tsxr lhA kl AlTAqAt
+[NeMo I 2024-06-03 05:01:41 wer:331] predicted:Hmlp dEA}yp jdyp tsxr lhA kl AlTAqAt
+[NeMo I 2024-06-03 05:01:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:41 wer:330] reference:AlElAqAt Alsy}p qd t>ty wqd nAq$t h*A mE dblwmAsy
+[NeMo I 2024-06-03 05:01:41 wer:331] predicted:AlElAqAt Alsy}p qd t>ty wqd nAq$t h*A mE dblwmAsy
+[NeMo I 2024-06-03 05:01:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:41 wer:330] reference:mn kbryAt Al$rkAt >Elnt >nhA ln tsyr rHlAt fwq $bh jzyrp synA' bEd h*A AlHAdv
+[NeMo I 2024-06-03 05:01:41 wer:331] predicted:mn kbryAt Al$rkAt >Elnt >nhA ln tsyr rHAlAt fwq $bh jzyrp synA' bEd h*A AlHAdv
+[NeMo I 2024-06-03 05:01:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:42 wer:330] reference:Emlyp mn h*A Alqbyl hw Alrws b>n yltqTwA AlrsAlp wynsHbwA mn AlmnTqp
+[NeMo I 2024-06-03 05:01:42 wer:331] predicted:EmlyA mn h*A Alqbyl hw Alrws b>n yltqTwA AlrsAlp wynsHbwA mn AlmnTqp
+[NeMo I 2024-06-03 05:01:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:42 wer:330] reference:swf ystfyd mnh >yDA AlnZAm AlmSry b>n yvbt nfsh b>nh rAE
+[NeMo I 2024-06-03 05:01:42 wer:331] predicted:ystfyd mnh >yDA AlnZAm AlmSry b>n yvbt nfsh b>nh rAEy
+[NeMo I 2024-06-03 05:01:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:42 wer:330] reference:wE$rAt AlAlAf wxrjwA mnhA mhzwmyn
+[NeMo I 2024-06-03 05:01:42 wer:331] predicted:wE$rAt Al|lAf wxrjwA mnhm mhzwmyn
+[NeMo I 2024-06-03 05:01:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:43 wer:330] reference:AlnAs Al*yn lA ywAfqwn ElY tnZym Aldwlp wlA ywAfqwn ElY syAsAth wyrwnhA mxAlfp $rEyA
+[NeMo I 2024-06-03 05:01:43 wer:331] predicted:AlnAs Al*yn lA ywAfqwn ElY tnZym Aldwlp wlA ywAfqwn ElY syAsAth wyrwn hm xAlyp $rEyp
+[NeMo I 2024-06-03 05:01:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:43 wer:330] reference:h*A ybdw Al|n bEyd AlmnAl TbEA
+[NeMo I 2024-06-03 05:01:43 wer:331] predicted:h*A ybdw Al|n bEyd AlmnAl TbEA
+[NeMo I 2024-06-03 05:01:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:43 wer:330] reference:wrbmA bED AltEAwn fy mkAfHp Al<rhAb
+[NeMo I 2024-06-03 05:01:43 wer:331] predicted:wrbmA bED AltEAwn fy mkAfHp Al<rhAb
+[NeMo I 2024-06-03 05:01:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:43 wer:330] reference:wmn qbl >TrAf >kvr qdrp ElY AltHkm fy yEny
+[NeMo I 2024-06-03 05:01:43 wer:331] predicted:wmn qbl >TrAf >kvr qdrp ElY AltHkm fy yEny
+[NeMo I 2024-06-03 05:01:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:44 wer:330] reference:hw mn yn>Y bnfsh En Algrq
+[NeMo I 2024-06-03 05:01:44 wer:331] predicted:hw mn yn>Y bnfsh En Algrq
+[NeMo I 2024-06-03 05:01:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:44 wer:330] reference:knqTp jdlyp tdEm mwqfhA
+[NeMo I 2024-06-03 05:01:44 wer:331] predicted:knqTp jdlyp tdEm mwqfhA
+[NeMo I 2024-06-03 05:01:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:44 wer:330] reference:fqd $hdt Al>wsAT Al>kAdymyp wAlvqAfyp fy Albldyn mylAd tyAr jdyd ydEw lmqATEp <srA}yl
+[NeMo I 2024-06-03 05:01:44 wer:331] predicted:fqd $hdt Al>wsAT Al>kAdymyp wAlvqAfyp fy Albldyn mylAd tyAr jdyd ydEw lmqATEp <srA}yl
+[NeMo I 2024-06-03 05:01:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:45 wer:330] reference:lA ynAdwn bmqATEp Al$rkAt Alty ttEAml mEhA fHsb
+[NeMo I 2024-06-03 05:01:45 wer:331] predicted:lA ynAdwn bmqATEp Al$rkAt Alty ttEAml mEhA fHsb
+[NeMo I 2024-06-03 05:01:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:45 wer:330] reference:wsyAsp Alqhr wAltmyyz AlEnSry wAl>EmAl Alty tmArshA Hkwmp ntnyAhw Dd AlflsTynyyn
+[NeMo I 2024-06-03 05:01:45 wer:331] predicted:wsyAsp Alqhr wAltmyyz AlEnSry wAl>EmAl Alty tmArshA Hkwmp ntnyAhw Dd AlflsTynyyn
+[NeMo I 2024-06-03 05:01:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:45 wer:330] reference:AlTAlb Al*y y&yd <srA}yl ws wsyAsp <srA}yl >nA lA bd >n >Hmyh
+[NeMo I 2024-06-03 05:01:45 wer:331] predicted:AlTAlb Al*y y&yd <srA}yl wsyAsp <srA}yl >nA lA bd >n >HAmyh
+[NeMo I 2024-06-03 05:01:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:46 wer:330] reference:fqd ktbt hylAry klyntwn rsAlp <lyh ts>lh fyhA >n ysdy <lyhA AlnSH mn Ajl AltSdy lHrkp AlmqATEp
+[NeMo I 2024-06-03 05:01:46 wer:331] predicted:fqd k*bt hylAry klyntwn rsAlp <lyh ts>lh fyhA >n ysdy <lyhA AlnSH mn >jl AltSdy lHrkp AlmqATEp
+[NeMo I 2024-06-03 05:01:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:46 wer:330] reference:Al>stA*p fy jAmEp kAlyfwrnyA wAlEDw fy Almjls Alqwmy lljmEyp Al>myrkyp lldrAsAt >hlA bk sydp swnAynA
+[NeMo I 2024-06-03 05:01:46 wer:331] predicted:Al>stA* fy jAmEp kAlyfwrnyA wAlEDw fy Almjls Alqwmy lljmEyp Al>myrkyp lldrAsAt >hlA bk sydp SnEnA
+[NeMo I 2024-06-03 05:01:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:46 wer:330] reference:AlsyAsAt Al<srA}ylyp tdmr HyAp AlflsTynyyn wAlmjtmE wmn Dmnhm AlHyAp AltElymyp
+[NeMo I 2024-06-03 05:01:46 wer:331] predicted:AlsyAsAt Al<srA}ylyp tdmr HyAp AlflsTynyyn wAlmjtmE wmn Dmnhm AlHyAp AltElymyp
+[NeMo I 2024-06-03 05:01:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:47 wer:330] reference:lkn Alsbb Al>sAsy wAlsbb AlEqly Al>sAsy wAlmnTqy hy hw
+[NeMo I 2024-06-03 05:01:47 wer:331] predicted:lkn Alsbb Al>sAsy hw Alsbb AlEqly Al>sAsy wAlmnTqy h
+[NeMo I 2024-06-03 05:01:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:47 wer:330] reference:Almzyd mn Al>SwAt Alty tdEw <lY <nhA' h*h AlsyAsAt w>yDA xArj <srA}yl wflsTyn
+[NeMo I 2024-06-03 05:01:47 wer:331] predicted:Almzyd mn Al>SwAt Alty tdEw <lY <nhA' h*h AlsyAsAt w>yDA xArj <srA}yl wflsTyn
+[NeMo I 2024-06-03 05:01:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:47 wer:330] reference:wvyqp mqATEp <srA}yl wldynA AlEdyd mn Alrwb AlrwAbT
+[NeMo I 2024-06-03 05:01:47 wer:331] predicted:wvyqp mqATEp <srA}yl wldynA AlEdyd mn AlrwAbT
+[NeMo I 2024-06-03 05:01:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:48 wer:330] reference:ymvl ZAhrp Al|n ymvl Alkvyr
+[NeMo I 2024-06-03 05:01:48 wer:331] predicted:ymvl ZAhrp Al|n ymvl Alkvyr
+[NeMo I 2024-06-03 05:01:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:48 wer:330] reference:mn mvlA mn AlHrkAt wAlrwAbT wAlm&ssAt wAljmEyAt
+[NeMo I 2024-06-03 05:01:48 wer:331] predicted:mvlA mn AlHrkAt wAlrwAbT wAlm&ssAt wAljmEyAt
+[NeMo I 2024-06-03 05:01:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:48 wer:330] reference:bED Al>kAdymyyn Al>myrkyyn ywAjhwn Alkvyr mn Althdyd
+[NeMo I 2024-06-03 05:01:48 wer:331] predicted:mn bED Al>kAdymyyn Al>myrkyyn ywAjhwn Alkvyr mn Althdyd
+[NeMo I 2024-06-03 05:01:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:49 wer:330] reference:<srA}yl fy dAxl AlwlAyAt AlmtHdp bnA' ElY mA tHdvt bh mn dEm
+[NeMo I 2024-06-03 05:01:49 wer:331] predicted:<srA}yl fy dAxl AlwlAyAt AlmtHdp bnA' ElY mA tHdvt bh mn dEm
+[NeMo I 2024-06-03 05:01:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:49 wer:330] reference:wA$nTn bwst whArfArd mdrsp hArfArd
+[NeMo I 2024-06-03 05:01:49 wer:331] predicted:wA$nTn bwst whAd mdrsp hArbrd
+[NeMo I 2024-06-03 05:01:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:49 wer:330] reference:wAlAnthAkAt Algyr mqbwlp lHqwq Al<nsAn bHq Al$Eb AlflsTyny wrfD <srA}yl l>y tswyp
+[NeMo I 2024-06-03 05:01:49 wer:331] predicted:wAlAnthAkAt gyr Almqbwlp lHqwq Al<nsAn bHq Al$Eb AlflsTyny wrfD <srA}yl l>y tswyp
+[NeMo I 2024-06-03 05:01:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:50 wer:330] reference:AlmqATEp Eml tDAmny mE $Eb mZlwm whw jhd slmy w>slwb nAjE
+[NeMo I 2024-06-03 05:01:50 wer:331] predicted:AlmqATEp Eml tDAmny mE $Eb mZlwm whw jhd slmy w>slwb nAjH
+[NeMo I 2024-06-03 05:01:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:50 wer:330] reference:wyrY kvyr mn mEArDy <srA}yl >n mmArsAthA Dd AlflsTynyyn fy Al>rADy AlflsTynyp AlmHtlp
+[NeMo I 2024-06-03 05:01:50 wer:331] predicted:wyrY kvyr mn mEArDy <srA}yl >n mmArsAthA Dd AlflsTynyyn fy Al>rADy AlflsTynyp AlmHtlp
+[NeMo I 2024-06-03 05:01:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:51 wer:330] reference:kAnt AldEwp <lY mqATEp <srA}yl tSdr fy Al>wsAT Al>kAdymyp fy Almmlkp AlmtHdp mA Al*y tgyr
+[NeMo I 2024-06-03 05:01:51 wer:331] predicted:kAnt AldEwp lmqATEp <srA}yl tSdr fy Al>wsAT Al>kAdymyp fy Almmlkp AlmtHdp mA Al*y tgyr
+[NeMo I 2024-06-03 05:01:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:51 wer:330] reference:h*A dEA <lY AntqAd kbyr l<srA}yl wAldEwp lmqATEthA wh*A mA
+[NeMo I 2024-06-03 05:01:51 wer:331] predicted:h*A dEwA <lY AntqAd kbyr l<srA}yl wAldEwp lmqATEthA wh*A mA
+[NeMo I 2024-06-03 05:01:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:51 wer:330] reference:wlmA*A h*A AlwEy Al|n
+[NeMo I 2024-06-03 05:01:51 wer:331] predicted:wlmA*A h*A AlwEy Al|n
+[NeMo I 2024-06-03 05:01:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:52 wer:330] reference:Al*yn ydEwn <lY AlmqATEp yjb >n ybrrwA mwqfhm
+[NeMo I 2024-06-03 05:01:52 wer:331] predicted:Al*yn ydEwn llmqATEp yjb >n ybrrwA mwqfhm
+[NeMo I 2024-06-03 05:01:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:52 wer:330] reference:ymwlwnhA hnAk wln nktb >yp twSyAt l>$xAS yTlbwn AlEml hnAk h*A twAzn dqyq jdA
+[NeMo I 2024-06-03 05:01:52 wer:331] predicted:ymwlwnhA hnAk wln nktb >y twSyAt l>$xAS yrfDwn AlEml hnAk h*A twAzn dqyq jdA
+[NeMo I 2024-06-03 05:01:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:53 wer:330] reference:yEny mn byn mA >vArth h*h AlHrkp mn rdwd >fEAl AlsfArp Al<srA}ylyp ElY sbyl AlmvAl fy bryTAnyA
+[NeMo I 2024-06-03 05:01:53 wer:331] predicted:yEny mn byn mA >vArth h*h AlHrkp mn rdwd >fEAl AlsfArp Al<srA}ylyp ElY sbyl AlmvAl fy bryTAnyA
+[NeMo I 2024-06-03 05:01:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:53 wer:330] reference:b>nhA tryd <yqAfh >w b>n h*A mA tqwm bh b>n hw ntyjp syAsAthA AlqmEyp
+[NeMo I 2024-06-03 05:01:53 wer:331] predicted:b>nhA tryd <yqAfy >w b>n h*A A tqwm bh l>n hw ntyjp syAsAth AlqmEyp
+[NeMo I 2024-06-03 05:01:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:54 wer:330] reference:whnAk Al>xrY fy lA hnAk mSTlHAt kvyrp >xrY hnAk >ntAk by fy Alhnd
+[NeMo I 2024-06-03 05:01:54 wer:331] predicted:whnAk Al>xrY fy hnAk mSTlHAt kvyrp hnAk Antk fy Alhnd
+[NeMo I 2024-06-03 05:01:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:54 wer:330] reference:wbh*A tnthy h*h AlHlqp mn brnAmj AlwAqE AlErby nltqy gdA b<*n Allh fy Hlqp jdydp <lY AllqA'
+[NeMo I 2024-06-03 05:01:54 wer:331] predicted:wbh*A tnthy h*h AlHlqp mn brnAmj AlwAqE AlErby nltqy gdA b<*n Allh fy Hlqp jdydp <lY AllqA'
+[NeMo I 2024-06-03 05:01:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:55 wer:330] reference:Alty yrY AlbED fyhA bwAdr AntfADp hl trY fyhA bwAdr AntfADp flsTynyp vAlvp Dd >wDAE
+[NeMo I 2024-06-03 05:01:55 wer:331] predicted:Alty yrY AlbED fyhA bwAdr AntfADp hl trY fyhA bwAdr AntfADp flsTynyp vAlvp Dd >wDAE
+[NeMo I 2024-06-03 05:01:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:55 wer:330] reference:twjh >n $Ark fyhA jhAz Al>mn AlflsTyny nfsh fy Hynh kAn yAsr ErfAt
+[NeMo I 2024-06-03 05:01:55 wer:331] predicted:twjh > $Ark fyhA jhAz Al>mn AlflsTyny nfsh fy Hynh kAn yAsr ErfAt
+[NeMo I 2024-06-03 05:01:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:56 wer:330] reference:bEd Hrb lbnAn bxms snwAt kAnt fy HAlp AlHqyqp fy HAlp SEbp jdA bEd xrwjhA mn lbnAn
+[NeMo I 2024-06-03 05:01:56 wer:331] predicted:bEd Hrb lbnAn bxms snwAt kAnt fy HAlp AlHqyqp fy HAlp SEbp jdA bEd xrwjhA mn lbnAn
+[NeMo I 2024-06-03 05:01:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:56 wer:330] reference:wlkn lst mhtmA kvyrA fy Altsmyp mhtm >nh >brz mA fy h*h AlAntfADp
+[NeMo I 2024-06-03 05:01:56 wer:331] predicted:wlkn lst mhtmA kvyrA fy Altsmyp Almhtm >nh >brz mA fy h*h AlAntfADp
+[NeMo I 2024-06-03 05:01:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:56 wer:330] reference:whnA AlmfArqp AlkbrY >nh h*A Aljyl Ally mn >jlh DgT ltgyyr mnAhj Altdrys wltgyyr Eqlh wlk*A w>nh sy>klh AlAsthlAk wk*A <lY |xrh
+[NeMo I 2024-06-03 05:01:56 wer:331] predicted:whnA AlmfArqp AlkbrY >n h*A Aljyl Ally mn >jlh DgT ltgyyr mnAhj Altdrys wltgyyr Eqlh wlk*A w>nh sy>kl AlAsthlAk wk*A <lY |xrh
+[NeMo I 2024-06-03 05:01:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:57 wer:330] reference:yEny >hl Alqds EmlyA mn EAm wEAmyn t$hd Alqds HAlp AHtkAk h*A mA*A ymyz Alqds >nhA xArj nTAq AlslTp AlflsTynyp
+[NeMo I 2024-06-03 05:01:57 wer:331] predicted:yEny >hl Alqds EmlyA mn EAm wEAmyn t$hd Alqds HAlp AHtkAk h*A mA*A ymyz Alqds >nA xArj nTAq AlslTp AlflsTynyp
+[NeMo I 2024-06-03 05:01:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:57 wer:330] reference:slAH frdy yEny m$ $gl fSyl bydrb ElY slAH wk*A $gl frdy
+[NeMo I 2024-06-03 05:01:57 wer:331] predicted:slAH frdy yEny y$gl fSyl ydrb slAH wk*A $gl frdy
+[NeMo I 2024-06-03 05:01:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:58 wer:330] reference:wxASp >nh fy tnZyr lh*A yEny h*A m$ mxtlq m$ lys >mr wfq r&yp lA TbEA mktwb
+[NeMo I 2024-06-03 05:01:58 wer:331] predicted:wxASp >nh fy tnZyr lhA yEny h*A m$ mxtlq m$ lys >mr wfq r&yp y n TbEA h*A mktwb
+[NeMo I 2024-06-03 05:01:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:58 wer:330] reference:wlkn mnZry AlmfAwDAt yEtrfwn >nhA wSlt <lY Tryq msdwd wAntht wlkn lA ystntjwn AlntA}j yqfwn hnA
+[NeMo I 2024-06-03 05:01:58 wer:331] predicted:wlkn mnZry AlmfAwDAt yEtrfwn >nhA wSlt <lY Tryq mslwb mh wlkn lA ystntjw AlntA}j yqfwn hnA
+[NeMo I 2024-06-03 05:01:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:58 wer:330] reference:mlHmthA Al>xyrp AlHqyqp lqnt <srA}yl drs yEny >nA >Etqd kAn lm ynSf lkn
+[NeMo I 2024-06-03 05:01:58 wer:331] predicted:mlHmthA Al>xyrp AlHqyqp lqt <srA}yl drs yEny >nA >Etqd kAn lm ynSf n lkn
+[NeMo I 2024-06-03 05:01:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:59 wer:330] reference:qlt Al>qSY w>qwl lk >mr vAny AnflAt kAml llmstwTnyn fy AlDfp Algrbyp dwn rqyb >w Hsyb
+[NeMo I 2024-06-03 05:01:59 wer:331] predicted:qlt Al>qSY w>qwl lk >mr vAny AnflAt kAml llmstwTnyn fy AlDfp Algrbyp dwn rqyb >w Hsyb
+[NeMo I 2024-06-03 05:01:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:01:59 wer:330] reference:zEym >kbr dwlp fy AlEAlm lA y*kr flsTyn fy xTAbh xrjwA ly>x*wA Hqhm TbEA bdwn brnAmj bdwn AstrAtyjyAt wlkn tEbyr
+[NeMo I 2024-06-03 05:01:59 wer:331] predicted:zEym >kbr dwly fy AlEAlm lA y*kr flsTyn fy xTAbh wxrjwA ly>x*wA Hqhm TbEA bdwn brnAmj bdwn <strAtyjyAt wlkn tEbyr
+[NeMo I 2024-06-03 05:02:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:00 wer:330] reference:jlyA fy qDyp AlmsAs bAl>qSY wmA <lY *lk lkn h*A Al>mr <lY >yn ymkn >n y*hb
+[NeMo I 2024-06-03 05:02:00 wer:331] predicted:jlyA fy qDyp AlmsAs bAl>qSY wmA <lY *lk lkn h*A Al>mr <lY >yn ymkn >n y*hb
+[NeMo I 2024-06-03 05:02:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:00 wer:330] reference:h*A s&Al lTyf l>n Al<nsAn AlErby bHAjp <lY $y' yjmE Elyh
+[NeMo I 2024-06-03 05:02:00 wer:331] predicted:s&Al lTyf l>nh Al<nsAn AlErby bHAjp <lY $y' yjmE Ely
+[NeMo I 2024-06-03 05:02:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:01 wer:330] reference:>n yxrj qAdp flsTynyyn yEdwA Al$Eb AlflsTyny bAlmSAlHp >nA >Etqd HtY AlnAs >SbHwA ymqtwn h*h Alklmp
+[NeMo I 2024-06-03 05:02:01 wer:331] predicted:yxrj qAdp flsTynyyn yEdwA Al$Eb AlflsTyny bAlmSAlHp >nA >Etqd HtY AlnAs >SbHwA ymqtwn h*h Alklmp
+[NeMo I 2024-06-03 05:02:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:01 wer:330] reference:mA hw Albdyl AlmfAwDAt f$lt wtrfDwn AlEwdp l>y xyAr nDAly
+[NeMo I 2024-06-03 05:02:01 wer:331] predicted:mA hw Albdyl AlmfAwDAt f$lt wtrfDwn AlEwdp l>y xyAr nDAly
+[NeMo I 2024-06-03 05:02:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:02 wer:330] reference:swY Aljz' AlmrHly mnh Ally bytHwl <lY >bdy
+[NeMo I 2024-06-03 05:02:02 wer:331] predicted:s Aljz' AlmrHly mnh Al*y tHwl <lY >bdy
+[NeMo I 2024-06-03 05:02:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:02 wer:330] reference:Al*hAb <lY mHkmp AlEdl Aldwlyp h*h hAm$ ytyHhA AlwDE AlqA}m
+[NeMo I 2024-06-03 05:02:02 wer:331] predicted:Al*hAb <lY mHkmp AlEdl Aldwlyp h*h hAm$ ytyHhA AlwDE AlqA}m
+[NeMo I 2024-06-03 05:02:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:02 wer:330] reference:mvlmA AnTrH fy jnwb <fryqyA w<lY |xrh wxTw wtlqy AlxTAb >w tstxdm xTAb syAsy wxTAb vqAfy
+[NeMo I 2024-06-03 05:02:02 wer:331] predicted:mvlmA TrH fy jnwb >fryqyA w<lY |xrh >w tstxdm xTAb syAsy wxTAb vqAfy
+[NeMo I 2024-06-03 05:02:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:03 wer:330] reference:fyhA nwE mn AlDgT ElY <srA}yl wfyhA >yDA $y' <*A Twr
+[NeMo I 2024-06-03 05:02:03 wer:331] predicted:fyhA nwE mn AlDgT ElY <srA}yl wfyhA >yDA $y' <*A Twr
+[NeMo I 2024-06-03 05:02:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:03 wer:330] reference:nxSS lh nqA$ jz'A kbyrA mn AlnqA$ fy h*h AlHlqp rwsyA Alywm bAtt lAEbA r}ysyA fy swryA
+[NeMo I 2024-06-03 05:02:03 wer:331] predicted:nxSS lh nqA$A jz'A kbyrA mn AlnqA$ fy h*h AlHlqp rwsyA Alywm bAtt lAEbA r}ysyA fy swryA
+[NeMo I 2024-06-03 05:02:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:03 wer:330] reference:hl h*A AlnZAm nZAm AstbdAdy w>y nwE mn AlAstbdAd hw >nA >Etqd Altdxl
+[NeMo I 2024-06-03 05:02:03 wer:331] predicted:hl h*A AlnZAm nZAm AstbdAdy w>y nwE mn AlAstbdAd hw >nA >Etqd Altdxl
+[NeMo I 2024-06-03 05:02:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:04 wer:330] reference:wlkn kwnhA jz' mn AltrAv Alrwsy wjz' mn AltrAv Alqwmy Alrwsy
+[NeMo I 2024-06-03 05:02:04 wer:331] predicted:wlkn kwnhA jz' mn AltrAv Alrwsy wjz' mn AltrAv Alqwmy Alrwsy
+[NeMo I 2024-06-03 05:02:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:04 wer:330] reference:Alfkr Alqwmy Altrky SAr fy rdAt fEl qwmyp mn AlqwmyAt Al>xrY mnhm AlErb nEm wmnhm AlErb bs AlErb |xr nAs ElY fkrh EmlwA rd fEl
+[NeMo I 2024-06-03 05:02:04 wer:331] predicted:Alfkr Alqwmy Altrky SAr fy rdAt fEl qwmyp mn AlqwmyAt Al>xrY yZnh AlErb nEm mnhm AlErb bs AlErb |xr nAs ElY fkrp Enh rd fEl
+[NeMo I 2024-06-03 05:02:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:05 wer:330] reference:w>nh bh*A tqwm EZmp rwsyA wystTyE AlEnSr Alrwsy >n ykwn HAkm
+[NeMo I 2024-06-03 05:02:05 wer:331] predicted:w<nh bh*A tqwm EZAmp rwsyA wystTyE AlEnSr Alrwsy >n ykwn HAkmA
+[NeMo I 2024-06-03 05:02:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:05 wer:330] reference:mtElqp b<rAdp Al$Ewb w<qAmp kyAnAt dymqrATyp Hwl rwsyA h*A mAhw m$ m$ >nh h*A TbEA
+[NeMo I 2024-06-03 05:02:05 wer:331] predicted:mtElqp b<rAdp Al$Ewb w<qAmp kyAnAt dymqrATyp Hwl rwsyA h*A m$ AlmTlwb <n h*A TbEA
+[NeMo I 2024-06-03 05:02:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:06 wer:330] reference:wbd>t AlSHwp h*h Dd tmdd Al
+[NeMo I 2024-06-03 05:02:06 wer:331] predicted:wbd>t AlSHwp h*h Dd tmdd
+[NeMo I 2024-06-03 05:02:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:06 wer:330] reference:<lY Al mA ntHdv Enh Ally hw HAlp AlvwrAt fy lybyA TbEA hm kAnwA Dd b$kl wADH bs kAnwA mnAhDyn llvwrAt bmSr wlybyA bmSr
+[NeMo I 2024-06-03 05:02:06 wer:331] predicted:<lY mn tHdv Enh Ally hw HAlp AlvwrAt fy lybyA TbEA hm kAnwA Dd $kl s&l hm mnAhDyn llvwrp mSr w mSr
+[NeMo I 2024-06-03 05:02:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:07 wer:330] reference:>dAthA bTbyEthA mEAdyp l>y tHrk ll$Ewb mE AldymqrATyp Ally hw h*A AlnwE mn AltHAlf wtrY >y h*A >mr
+[NeMo I 2024-06-03 05:02:07 wer:331] predicted:>dAthA bTbyEthA mEAdyp l>y tHrk ll$Ewb mE AldymqrATyp Ally hw h*A AlnwE mn AltHAlf wtrY h*A
+[NeMo I 2024-06-03 05:02:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:07 wer:330] reference:Ebr nZryp mA tfsr ElAqthA ElAqp >wrwbA b|syA
+[NeMo I 2024-06-03 05:02:07 wer:331] predicted:Ebr nZryp mA tfsr ElAqthA ElAqp >wrwbA b|syA
+[NeMo I 2024-06-03 05:02:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:08 wer:330] reference:wlkn tmAnyp tmAnyp wAHd kAn >lksndr slTAnwf kAn mbEwv mydfydyf kAn mydfydyf Alr}ys lwkA$ynkw
+[NeMo I 2024-06-03 05:02:08 wer:331] predicted:wlkn wAHd slTAnh bAlk sndA slTAnh kAn mbEwv myd fydy kAn mdfydy fy Alr}ys wlys wk $nw
+[NeMo I 2024-06-03 05:02:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:09 wer:330] reference:ytfhm dwr dwlp <qlymyp mvl AlsEwdyp b>n
+[NeMo I 2024-06-03 05:02:09 wer:331] predicted:l ytfhm dwr dwlyp <qlymyp mvl AlsEwdyp b>n
+[NeMo I 2024-06-03 05:02:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:10 wer:330] reference:fy Eqydthm AlsyAsyp $y' mA mn h*A Al>mr <nh nZrp mA mrtAbp mtxwfp
+[NeMo I 2024-06-03 05:02:10 wer:331] predicted:fy Eqydthm AlsyAsyp $y' mA mn h*A Al>mr >nh nZrp mA mrtAbp mtxwfp
+[NeMo I 2024-06-03 05:02:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:10 wer:330] reference:b$kl xAS Dd Alsnp >w mE Al$yEp w<lY |xrh >nA bAEtqd Algrb mE mSAlHh wrwsyA >yDA
+[NeMo I 2024-06-03 05:02:10 wer:331] predicted:b$kl xAS Dd Alsny >w mE Al$yEp w<lY |xrh >Etqd Algrb mE mSAlHh wrwsyA >yDA
+[NeMo I 2024-06-03 05:02:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:10 wer:330] reference:fwq Al fwq AlmHAsbp dwl mA ysmY Aldwl AlEZmY ffEl kl mA fEl wlA TbEA kAn fy <dAnAt
+[NeMo I 2024-06-03 05:02:10 wer:331] predicted:fwq AlmHAsbp dwl mA ysmY dwl ElmA ffEl kl mA fEl wlA TbEA kAn fy <dAnAt
+[NeMo I 2024-06-03 05:02:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:11 wer:330] reference:>nA bAEtqd Eks bwtyn ElY Al>ql dwlp hw lA hw b b b
+[NeMo I 2024-06-03 05:02:11 wer:331] predicted:yEny >nA >Etqd Eks bwtyn ElY Al>ql dwlp l> hw
+[NeMo I 2024-06-03 05:02:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:11 wer:330] reference:AlnZAm Alswry <*A wDE hdf hw dEk mn Al*yn wDEwA hdf
+[NeMo I 2024-06-03 05:02:11 wer:331] predicted:AlnZAm Alswry <*A wDE hdfA hw dEk mn Al*yn wDEwA hdfA
+[NeMo I 2024-06-03 05:02:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:12 wer:330] reference:vlAv snwAt wSlwA <lY mdY >n AlnZAm ynhAr whm lA ystTyEwn mnEh mn AlAnhyAr
+[NeMo I 2024-06-03 05:02:12 wer:331] predicted:snwAt wSlwA <lY mdY >n AlnZAm ynhAr hm lA ystTyEwn mnh mn AlAnhyAr w
+[NeMo I 2024-06-03 05:02:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:12 wer:330] reference:qd yEtqd bED AlErb <nh lykn bED Alt>vyr Alrwsy dAxl AlnZAm Alswry >fDl mn >n ykwn t>vyr <yrAny mA}p bAlmA}p flykn t>vyr <yrAny xmsyn bAlmA}p wrwsy xmsyn bAlmA}p
+[NeMo I 2024-06-03 05:02:12 wer:331] predicted:qd yEtqd bED AlErb >nh lykn bED Alt>vyr Alrwsy dAxl AlnZAm Alswry >fDl mn ykwn t>vyr <yrAny flykn t>vyr <yrAny wrwsy
+[NeMo I 2024-06-03 05:02:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:12 wer:330] reference:hAy jAy kqwp EZmY ldyhA HsAbAt dwlyp stxDE EqlhA fy >y wqt >nt Anthyt
+[NeMo I 2024-06-03 05:02:12 wer:331] predicted:my kqwp EZmY ldyhA HsAbAt dwlyp stxDE EqlhA fy >y wqt >nt Anthyt
+[NeMo I 2024-06-03 05:02:13 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:13 wer:330] reference:bESA}b AlHq myly$yAt mA Adry myn myly$yAt mA Adry myn b jy$
+[NeMo I 2024-06-03 05:02:13 wer:331] predicted:bESA}b AlHq mly$yAt mdry myly$yAt mdrmyn bjy$
+[NeMo I 2024-06-03 05:02:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:14 wer:330] reference:Ally bdh >myrkA ttdxl blybyA wbEdhA rAHwA fjrwA AlSlyb Al>Hmr bs hnAk yA dktwr kAn fy wSf llHrAk Alvwry
+[NeMo I 2024-06-03 05:02:14 wer:331] predicted:Ally ybdwA >myrkA ttdxl fy lybyA wbEd mA A rAH y jr A Slyb Al>sr hnAk dktwr kAn fy wSm llHrAk Alvwry
+[NeMo I 2024-06-03 05:02:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:14 wer:330] reference:wtwrT fy >mAkn >xrY hw m$ HAsb kl HsAbAth >Etqd twrT l>nh
+[NeMo I 2024-06-03 05:02:14 wer:331] predicted:wtwrT fy >mAkn >xrY hw m$ HAsb kl HsAbAt >Etqd twrT l>n
+[NeMo I 2024-06-03 05:02:14 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:14 wer:330] reference:AlErbyp tjAh Altdxl Alrwsy wlA wlA mA zAlt kmA kAnt fy AlsAbq fqT AltSryH TbEA yEny lEbp syAsp xlynA nqwl
+[NeMo I 2024-06-03 05:02:14 wer:331] predicted:AlErbyp tjAh Altdxl Alrwsy wlA mA zAlt kmA kAnt fy AlsAbq fqT AltSryH TbEA yEny lEb AlsyAsp xlynA nqwl
+[NeMo I 2024-06-03 05:02:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:15 wer:330] reference:TbEA h*A lA yHl Alm$Akl wlkn wfy |xryn AEtbrwA >n AlvwrAt thdyd lhm
+[NeMo I 2024-06-03 05:02:15 wer:331] predicted:TbEA h*A lA yHl Alm$Akl wlkn wfy |xryn AEtbrwA >n AlvwrAt thdyd lhm
+[NeMo I 2024-06-03 05:02:15 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:15 wer:330] reference:bqA' AlnZAm >w <SlAH AlnZAm <SlAH AlnZAm bmfAwDAt k*A >SbH hnAlk mHA*yr
+[NeMo I 2024-06-03 05:02:15 wer:331] predicted:bqA' AlnZAm >w <SlAH AlnZAm w<SlAH AlnZAm bmfAwDAt k*A >SbH hnAlk mHA*yr
+[NeMo I 2024-06-03 05:02:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:16 wer:330] reference:AlbED mstEd >n ytfAhm mEhm l>nh lys ldyhm m$klp mE rwsyA ldyhm m$klp mE <yrAn w>nA mt>sf lh*A >nA >qwl b>sf lh*A >nA >Etqd >nh
+[NeMo I 2024-06-03 05:02:16 wer:331] predicted:AlbED mstEd >n ytfAhm mEhm l>n lys ldyh m$klp mE rwsyA ldyh m$klp mE <yrAn w>nA mt>sf lh*A >nA >qwl b>sf lh*A >nA >Etqd >nh
+[NeMo I 2024-06-03 05:02:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:16 wer:330] reference:Al>mr mtElq lys bhA fqT Al>mr mtElq bhA AlsEwdyp qTr
+[NeMo I 2024-06-03 05:02:16 wer:331] predicted:Al>mr mtElq lys bhA fqT mtElq bhA AlsEwdyp qTr
+[NeMo I 2024-06-03 05:02:16 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:16 wer:330] reference:wbAltAly h*h AlmnAsbp $w yEny Hrkp tHrr hy m$ klAm Hrkp tHrr yEny $y' wHdwy Hrkp tHrr yEny AljnAH AlsyAsy wAlEskry bykwnwA mE bED
+[NeMo I 2024-06-03 05:02:16 wer:331] predicted:wbAltAly h*h AlmnAsbp yEny Hrkp tHrr hy Alm$klp Hrkp tHrr yEny $y' wHdp wHrkp tHrr yEny AljnAH AlsyAsy wAlEskry ykwnwA mE bED
+[NeMo I 2024-06-03 05:02:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:17 wer:330] reference:dwl Alxlyj AlErby fy Zl AlmtgyrAt Al<qlymyp wAldwlyp why mtgyrAt kbyrp t&vr b$kl
+[NeMo I 2024-06-03 05:02:17 wer:331] predicted:dwl Alxlyj AlErby fy Zl AlmtgyrAt Al<qlymyp wAldwlyp why mtgyrAt kbyrp t&vr b$kl
+[NeMo I 2024-06-03 05:02:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:17 wer:330] reference:fy AlHqyqp mnTqp Alxlyj wdwl Alxlyj AlErby
+[NeMo I 2024-06-03 05:02:17 wer:331] predicted:>n A fy AlHqyqp mnTqp Alxlyj wdwl Alxlyj AlErby
+[NeMo I 2024-06-03 05:02:17 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:17 wer:330] reference:mbA$rp yEny xTrA ElY dwl Alxlyj fy AlDfp Al>xrY
+[NeMo I 2024-06-03 05:02:17 wer:331] predicted:mbA$rp yEny xTrA ElY dwl Alxlyj fy AlDfp Al>xrY
+[NeMo I 2024-06-03 05:02:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:18 wer:330] reference:stp zA}d Atnyn >w mA smy b<ElAn dm$q dwl mjls AltEAwn wmSr wswryA
+[NeMo I 2024-06-03 05:02:18 wer:331] predicted:stp zAd Avnyn >w mA smy b<ElAn dm$q dwl mjls AltEAwn wmSr wswryA
+[NeMo I 2024-06-03 05:02:18 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:18 wer:330] reference:b$kl kbyr En xTr ErAq SdAm Hsyn fy Al*y gzA Alkwyt yEny bmEnY kAn hnAk tgyyr fy AlxArTp fy EAm tsEyn hl ymkn >n t$kl <yrAn
+[NeMo I 2024-06-03 05:02:18 wer:331] predicted:>n b$kl kbyr En xTr ErAq SdAm Hsyn Al*y gzA Alkwyt yEny bmEnY kAn hnAk tgyyr fy AlxArTp fy EAm hl ymkn >n t$kl <yrAn
+[NeMo I 2024-06-03 05:02:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:19 wer:330] reference:nfw* >w AHtlAl gyr mbA$r mvl Al*y HSl fy AlErAq bEd sqwT nZAm SdAm wbAltAly
+[NeMo I 2024-06-03 05:02:19 wer:331] predicted:nfw* >w AHtlAl gyr mbA$r mvl Al*y HSl fy AlErAq bEd sqwT nZAm SdAm wbAltAly
+[NeMo I 2024-06-03 05:02:19 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:19 wer:330] reference:yEny nqwl bnA' mnATq nfw* >w <yjAd mnATq nfw* <n SH AltEbyr
+[NeMo I 2024-06-03 05:02:19 wer:331] predicted:yEny nqwl bnA' mnATq nfw* >w <yjAd mnATq nfw* <n SH AltEbyr
+[NeMo I 2024-06-03 05:02:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:20 wer:330] reference:bsbb tbAyn AlmSAlH lkn mrp >xrY AlxTr Al<yrAny yEtbr nsby bAlnsbp ldwl Alxlyj
+[NeMo I 2024-06-03 05:02:20 wer:331] predicted:>w bsbb tbAyn AlmSAlH lkn mrp >xrY AlxTr Al<yrAny yEtbr nsbyA bAlnsbp ldwl Alxlyj
+[NeMo I 2024-06-03 05:02:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:20 wer:330] reference:bAlnsbp llsEwdyp whw Alxlyj wAljzyrp AlErbyp yEtbr mjAl Hywy bAlnsbp
+[NeMo I 2024-06-03 05:02:20 wer:331] predicted:bAlnsbp llsEwdyp whw Alxlyj wAljzyrp AlErbyp yEtbr mjAlA HywyA bAlnsbp
+[NeMo I 2024-06-03 05:02:20 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:20 wer:330] reference:<DAfp <lY bED AlmxATr AldAxlyp yEny wjwd HrAk AjtmAEy wsyAsy fy AlmjtmEAt Alxlyjyp
+[NeMo I 2024-06-03 05:02:20 wer:331] predicted:<DAfp <lY bED AlmxATr AldAxlyp yEny wjwd HrAk AjtmAEy wsyAsy fy AlmjtmEAt Alxlyjyp
+[NeMo I 2024-06-03 05:02:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:21 wer:330] reference:<lY ftrp mstqblyp mHAwlp AlDgT Al>myrky ElY dwl Alxlyj ldmj <yrAn hl stkwn hnAk mnZwmp >mnyp
+[NeMo I 2024-06-03 05:02:21 wer:331] predicted:<lY Alftrp Almstqblyp mHAwlp AlDgT Al>myrky ElY dwl Alxlyj ldmj <yrAn hl stkwn hnAk mnZwmp >mnyp
+[NeMo I 2024-06-03 05:02:21 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:21 wer:330] reference:ntHdv En mwAqf mtbAynp xSwSA fymA ytElq bAl>xTAr AlxArjyp Tyb bs h*A m&$r ElY
+[NeMo I 2024-06-03 05:02:21 wer:331] predicted:ntHdv En mwAqf mtbAynp xSwSA fymA ytElq bAl>xTAr AlxArjyp Tyb bs h*A m&$r ElY
+[NeMo I 2024-06-03 05:02:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:22 wer:330] reference:AsmH ly dktwr >twqf mE fASl qSyr ldynA yEny mjmwEp kbyrp mn Al>fkAr Alty nTrHhA wnnAq$hA fy Hlqp Allylp
+[NeMo I 2024-06-03 05:02:22 wer:331] predicted:AsmH ly dktwr >twqf mE fASl qSyr ldynA yEny mjmwEp kbyrp mn Al>fkAr Alty nTrHhA wnnAq$hA fy Hlqp Allylp
+[NeMo I 2024-06-03 05:02:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:22 wer:330] reference:hl tEtqd >n <yrAn Alywm hy AlxTr Alr}ysy AlxArjy Alkbyr Al*y yhdd dwl mjls AltEAwn
+[NeMo I 2024-06-03 05:02:22 wer:331] predicted:hl tEtqd >n <yrAn Alywm hy AlxTr Alr}ysy AlxArjy Alkbyr Al*y yhdd dwl mjls AltEAwn
+[NeMo I 2024-06-03 05:02:22 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:22 wer:330] reference:fy mjls AltEAwn mvl mA tfDl Aldktwr ybdw >nhA gyr mktmlp yEny
+[NeMo I 2024-06-03 05:02:22 wer:331] predicted:fy mjls AltEAwn mvlmA tfDl Aldktwr ybdw >nhA gyr mktmlp yEny
+[NeMo I 2024-06-03 05:02:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:23 wer:330] reference:nEm yEny AlmjtmE ykwn
+[NeMo I 2024-06-03 05:02:23 wer:331] predicted:bl yEny AlmjtmE ykwn
+[NeMo I 2024-06-03 05:02:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:23 wer:330] reference:mnATq w>dwAt Alnfw* Al<yrAny fy AlmnTqp
+[NeMo I 2024-06-03 05:02:23 wer:331] predicted:mnATq w>dwAt Alnfw* Al<yrAny fy AlmnTqp
+[NeMo I 2024-06-03 05:02:23 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:23 wer:330] reference:mstglyn AlfjwAt Alty Almwjwdp fy Al>mn AlwTny bmfhwmp AlwAsE
+[NeMo I 2024-06-03 05:02:23 wer:331] predicted:mstglyn AlfjwAt Almwjwdp fy Al>mn AlwTny bmfhwmh AlwAsE
+[NeMo I 2024-06-03 05:02:24 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:25 wer:330] reference:hA}l l>nk lA twAjh jyw$ AnZr llymn nHn Al|n nqAtl jmAEAt tftt Aljy$ Alymny
+[NeMo I 2024-06-03 05:02:25 wer:331] predicted:hA}l l>nk lA twAjh jyw$ >nZr llymn nHn Al|n nqAtl jmAEAt tftt Aljy$ Alymny
+[NeMo I 2024-06-03 05:02:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:26 wer:330] reference:tdEw lmvl h*A AltTwyr AlhAm Al*y >SbH Alsmp Alr}ysyp
+[NeMo I 2024-06-03 05:02:26 wer:331] predicted:tdEw lmvl h*A AltTwyr AlhAm Al*y >SbH Alsmp Alr}ysyp
+[NeMo I 2024-06-03 05:02:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:26 wer:330] reference:AlbED yrY >n EASfp AlHzm fy Alymn kAnt AlxTwp AlsEwdyp Alxlyjyp Al>wlY lmwAjhp h*A Alnfw* wqTE
+[NeMo I 2024-06-03 05:02:26 wer:331] predicted:AlbED yrY >n EASfp AlHzm fy Alymn kAnt AlxTwp AlsEwdyp Alxlyjyp Al>wlY lmwAjhp h*A Alnfw* wqTE
+[NeMo I 2024-06-03 05:02:26 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:26 wer:330] reference:w>yDA dwl Alxlyj kyf TyrAn ywAjh ESAbAt rH tjd SEwbp w>yDA dwl Alxlyj tftqr lltSnyE AlEskry Al*Aty
+[NeMo I 2024-06-03 05:02:26 wer:331] predicted:w>yDA dwl ly TyrAn wAjhp yEny rH tjd SEwbp w>yDA dwl Alxlyj tftqr lltSnyE AlEskry Al*Aty
+[NeMo I 2024-06-03 05:02:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:27 wer:330] reference:hnAk m&$rAt lkn bAlt>kyd lA tstTyE fy AlmrHlp AlrAhnp
+[NeMo I 2024-06-03 05:02:27 wer:331] predicted:hnAk m&$rAt lkn bAlt>kyd lA tstTyE fy AlmrHlp AlrAhnp
+[NeMo I 2024-06-03 05:02:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:27 wer:330] reference:Hjm AlSrf ElY AltslH fy Alxlyj mxyf mhwl m}At AlmlyArAt tSrf ElY kAfp Aldwl
+[NeMo I 2024-06-03 05:02:27 wer:331] predicted:Hjm AlSrf ElY AltslH fy Alxlyj mxyf mA hw m}At AlmlyArAt tSrf ElY kAfp Aldwl
+[NeMo I 2024-06-03 05:02:27 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:27 wer:330] reference:Almxzwn AlnfTy fyh hnAk tdAxlAt fy Alxlyj mvl mA HSl
+[NeMo I 2024-06-03 05:02:27 wer:331] predicted:Almxzwn AlnfTy fyh hnAk tdxlAt fy Alxlyj mvlmA HSl
+[NeMo I 2024-06-03 05:02:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:28 wer:330] reference:mvl mA AstTAEt <yrAn *lk nHn >yDA qAdryn tjy$ mn nstTyE tjy$h
+[NeMo I 2024-06-03 05:02:28 wer:331] predicted:mvlmA AstTAEt <yrAn *lk nHn >yDA qAdryn ElY tjyy$ mn nstTyE tjyy$h
+[NeMo I 2024-06-03 05:02:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:28 wer:330] reference:lA nSnf nHn Al|n fy mrHlp lys fyhA tSnyf HynmA kAnt >wrwbA
+[NeMo I 2024-06-03 05:02:28 wer:331] predicted:lA nSnf nHn Al|n fy mrHlp lys fy h*A tSnyf HynmA kAnt >wrwbA
+[NeMo I 2024-06-03 05:02:28 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:28 wer:330] reference:Tyb dktwr bs bs *kr yEny bs *kr *krY tnfE AljmyE EklAmk yEny
+[NeMo I 2024-06-03 05:02:28 wer:331] predicted:Tyb dktwr bs bs >*kr yEny bs k *krY tnfE AljmyE klAmk yEny
+[NeMo I 2024-06-03 05:02:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:29 wer:330] reference:jAnb tAryxy qd ykwn yEny bAlsEwdyp wdwl Alxlyj tmlk >dwAt t>vyr fy mSr mvlA
+[NeMo I 2024-06-03 05:02:29 wer:331] predicted:>w jAnb tAryxy qd ykwn yEny AlsEwdyp wdwl Alxlyj tmlk >dwAt t>vyr fy mSr mvlA
+[NeMo I 2024-06-03 05:02:29 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:29 wer:330] reference:lA ywjd mrjEyp lA ywjd m$rwE yqwd wystfyd mnhA h&lA' hnAk AxtlAf wADH <n $}t byn AlsEwdyp kA kA
+[NeMo I 2024-06-03 05:02:29 wer:331] predicted:lA ywjd mrjEyp lA ywjd m$rwE yqwd h hnA ystbd n h&lA' l hnAk AxtlAf wADH byn <n $}t AlsEwdyp
+[NeMo I 2024-06-03 05:02:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:30 wer:330] reference:lkn mn byn AlxyArAt AlmtAHp bAlnsbp ldwl Alxlyj tHqyq m$rwE <SlAH syAsy j*ry
+[NeMo I 2024-06-03 05:02:30 wer:331] predicted:lkn mn byn AlxyArAt AlmtAHp bAlnsbp ldwl Alxlyj tHqyq m$rwE <SlAH syAsy j*ry
+[NeMo I 2024-06-03 05:02:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:30 wer:330] reference:>nA >Etqd b>nh hnAk m&$rAt ElY wjwd nwE mn tqlyl AlAhtmAm bAlnsbp l<dArp >wbAmA bAlnsbp lmnTqp Alxlyj
+[NeMo I 2024-06-03 05:02:30 wer:331] predicted:>nA >Etqd b>n hnAk m&$rAt ElY wjwd nwE mn tqlyl AlAhtmAm bAlnsbp l<dArp >wbAmA bAlnsbp lmnTqp Alxlyj
+[NeMo I 2024-06-03 05:02:30 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:30 wer:330] reference:h*A Al>mr mrp >xrY ytwqf wyEtmd ElY mjmwEp mn AlEwAml mn bynhA Almwqf Al>myrky mwqf Al<dArp Al>myrkyp AqSd
+[NeMo I 2024-06-03 05:02:30 wer:331] predicted:h*A Al>mr mrp >xrY ytwqf wyEtmd ElY mjmwEp mn AlEwAml mn bynhA Almwqf Al>myrky mwqf Al<dArp Al>myrkyp >qSd
+[NeMo I 2024-06-03 05:02:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:31 wer:330] reference:lys fqT AlwlAyAt AlmtHdp lkn rwsyA >yDA lhA dwr trkyA fy Al|wnp Al>xyrp lhA dwr wbAltAly
+[NeMo I 2024-06-03 05:02:31 wer:331] predicted:lys fqT AlwlAyAt AlmtHdp lkn rwsyA >yDA lhA dwr trkyA fy Al|wnp Al>xyrp lhA dwr wbAltAly
+[NeMo I 2024-06-03 05:02:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:31 wer:330] reference:Al>myrkywn brgmAtywn fy Tryqp tfkyrhm yfAwDwn ysAwmwn l*lk hm Al|n fy >Hwj AlZrwf >w fy >Hwj
+[NeMo I 2024-06-03 05:02:31 wer:331] predicted:Al>myrkywn brAgmAtywn bTryqp tfkyrhm yfAwDwn ysAwmwn l*lk hm Al|n fy >Hwj AlZrwf w fy >Hwj
+[NeMo I 2024-06-03 05:02:31 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:31 wer:330] reference:wtHqyq tswyAt lkn h*A mrp >xrY ln ykwn qbl <yjAd tswyp slmyp fy swryA
+[NeMo I 2024-06-03 05:02:31 wer:331] predicted:wtHqyq tswyAt lkn h*A mrp >xrY ln ykwn qbl <yjAd tswyp slmyp fy swryA
+[NeMo I 2024-06-03 05:02:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:32 wer:330] reference:>wlA yEny lm tkn EAdlA fy twzyE Alwqt AlHqyqp rgm >nny >nA
+[NeMo I 2024-06-03 05:02:32 wer:331] predicted:>wlA yEny lm tkn EAdlA fy twzyE Alwqt AlHqyqp rgm >nny >nA
+[NeMo I 2024-06-03 05:02:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:32 wer:330] reference:wrbmA kAn sHb <yznhAwr wgyrhA ydxl fy h*A AlsyAq vm
+[NeMo I 2024-06-03 05:02:32 wer:331] predicted:wrbmA kAn sHb >yznhAwr wgyrhA ydxl fy h*A AlsyAq vm
+[NeMo I 2024-06-03 05:02:32 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:32 wer:330] reference:wbd>t <tSAlAt rwsyp >myrkyp fk>nmA qAlwA llmxTT Al>myrky
+[NeMo I 2024-06-03 05:02:32 wer:331] predicted:wbd>t AtSAlAt rwsyp >myrkyp fk>n mA qAlwA llmxTT Al>myrky
+[NeMo I 2024-06-03 05:02:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:33 wer:330] reference:trkyA jz' mn Hlf $mAl Al>Tlsy bqwAEdhA Al>Tlsyp Almwjwdp
+[NeMo I 2024-06-03 05:02:33 wer:331] predicted:trkyA jz' mn Hlf $mAl Al>Tlsy bqwAEdhA Al>Tlsyp Almwjwdp
+[NeMo I 2024-06-03 05:02:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:33 wer:330] reference:b>nhA t$ml sbE nwAHy h*h lA bd >n tEqd lhA ljAn wtEqd lhA frq >n yt>kdwA
+[NeMo I 2024-06-03 05:02:33 wer:331] predicted:b>nhA t$ml nwAHy h*h lA bd >n tEqd lhA ljAn wtEqd lhA frq >n yt>kdwA
+[NeMo I 2024-06-03 05:02:33 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:33 wer:330] reference:>nt tqTE AlTryq lys fqT ElY <yrAn tqTEh ElY kl nAEq tqTEh ElY AlmnZmAt Al<rhAbyp AlmtTrfp Alty AstqTb AlnAs
+[NeMo I 2024-06-03 05:02:33 wer:331] predicted:>nt tqTE AlTryq lys fqT ElY <yrAn tqTE ElY kl lAEq tqTE ElY AlmnZmAt Al<rhAbyp AlmtTrfp Alty tstqTb AlnAs
+[NeMo I 2024-06-03 05:02:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:34 wer:330] reference:yjb >n ntjAwz bED AlxlAfAt Alty lA dAEy lhA w>n nTwr h*A Almjls <lY Sygp >fDl
+[NeMo I 2024-06-03 05:02:34 wer:331] predicted:yjb >n ntjAwz bED AlxlAfAt Alty lA dAEy lhA w>n nTwr h*A Almjls <lY Sygp >fDl
+[NeMo I 2024-06-03 05:02:34 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:34 wer:330] reference:hw bAlt>kyd Al>mn AlwTny lA ytElq fqT bAljAnb AlEskry Al>mn AlwTny ytElq bkl AlmjAlAt
+[NeMo I 2024-06-03 05:02:34 wer:331] predicted:hw bAlt>kyd Al>mn AlwTny lA ytElq fqT bAljAnb AlEskry Al>mn AlwTny ytElq bkl AlmjAlAt
+[NeMo I 2024-06-03 05:02:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:35 wer:330] reference:mn zro sum gam >w AlmEAdlp AlSfryp <lY win win gam AlmEAdlp AlrbHyp lklA AlTrfyn wh*A Al>mr
+[NeMo I 2024-06-03 05:02:35 wer:331] predicted:mn zyrw sAn qym >w AlmEAdlp AlSfryp <lY wyn wnqym >w AlmEAdlp AlrbHyp lkl AlTrfyn wh*A Al>mr
+[NeMo I 2024-06-03 05:02:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:35 wer:330] reference:Ely AltwAty AlkAtb wAlmHll AlAstrAtyjy DyfnA mn jdp wAl*y yEny t>xr Zhwrh l>sbAb fnyp xArjp En <rAdtnA $krA jzylA lkm m$AhdynA AlkrAm
+[NeMo I 2024-06-03 05:02:35 wer:331] predicted:En AltwAty AlkAtb wAlmHll Al<strAtyjy DyfnA mn jdp wAl*y y t>xr Zhwrh l>sbAb fnyp xArjp En <rAdtnA $krA jzylA lkm m$AhdynA AlkrAm
+[NeMo I 2024-06-03 05:02:35 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:35 wer:330] reference:mA Alfrq byn >n tkwn fy AlHDn Al>myrky w>n tkwn fy AlHDn Alrwsy
+[NeMo I 2024-06-03 05:02:35 wer:331] predicted:mA Alfrq byn >n tkwn fy AlHDn Al>myrky w>n tkwn fy AlHDn Alrwsy
+[NeMo I 2024-06-03 05:02:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:36 wer:330] reference:byn <srA}yl wrwsyA fy swryA >lm ySbH b$Ar Al>sd EmlyA fy nfs Alxndq mE rwsyA w<srA}yl
+[NeMo I 2024-06-03 05:02:36 wer:331] predicted:byn <srA}yl wrwsyA fy swryA >lm ySbH b$Ar Al>sd EmlyA fy nfs Alxndq mE rwsyA w<srA}yl
+[NeMo I 2024-06-03 05:02:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:36 wer:330] reference:bsbb AstdEA}h llrws >lm tstnjd bfSA}l mn m$rq Al>rD wmgrbhA
+[NeMo I 2024-06-03 05:02:36 wer:331] predicted:bsbb AstdEA}h llrws >lm tstnjd bfSA}l mn m$rq Al>rD wmgrbhA
+[NeMo I 2024-06-03 05:02:36 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:36 wer:330] reference:lm ytrk >HdA <*A wAHd fqT byrm$ bw$h ySbH EmylA wxA}nA llShywnyp wAl<mbryAlyp
+[NeMo I 2024-06-03 05:02:36 wer:331] predicted:lm ytrk >HdA <*A wAHd fqT yrm$ bw$ ySbH EmylA wxA}nA llShywnyp wAl<mbryAlyp
+[NeMo I 2024-06-03 05:02:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:37 wer:330] reference:HtY AlfEl yxwn fy Allgp AlErbyp
+[NeMo I 2024-06-03 05:02:37 wer:331] predicted:HtY AlfEl ykwn fy Allgp AlErbyp
+[NeMo I 2024-06-03 05:02:37 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:37 wer:330] reference:xAn bldh xAn zwjth xAn >SdqA'h xAn kl mn tEAml mEhm
+[NeMo I 2024-06-03 05:02:37 wer:331] predicted:xAn bldh xAn zwjth xAn >SdqA}h xAn kl mn tEAml mEhm
+[NeMo I 2024-06-03 05:02:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:38 wer:330] reference:h*A AlkA}n lA >kvr wlA >ql >ntm HynmA tqwlwn Enh xA}n
+[NeMo I 2024-06-03 05:02:38 wer:331] predicted:h*A AlkA}n lA >kvr wlA >ql >ntm HynmA tqwlwn Enh xA}n
+[NeMo I 2024-06-03 05:02:38 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:38 wer:330] reference:mAl$yn kAlmy wtqwl >nh kAn yfAwD Al<srA}ylyyn tHt <$rAfnA
+[NeMo I 2024-06-03 05:02:38 wer:331] predicted:myly$yA kAlmy wtqwl >nh kAn yfAwD Al<srA}ylyyn tHt <$rAfA Tyb
+[NeMo I 2024-06-03 05:02:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:39 wer:330] reference:fy EnA mvl bAl$Am lmA bysmE lmA bysmE wAHd Dyfk hyk Em yHky
+[NeMo I 2024-06-03 05:02:39 wer:331] predicted:fy EnA mvl bAl$ArE mElmA ysmE wAHd Dyfk yk Em yHky
+[NeMo I 2024-06-03 05:02:39 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:39 wer:330] reference:w<HdA$r Sdyq wTbEA ElY r>shA AlwlAyAt AlmtHdp wbryTAnyA wfrnsA
+[NeMo I 2024-06-03 05:02:39 wer:331] predicted:wd E$r Sdyq wTbEA ElY r>shA AlwlAyAt AlmtHdp wbryTAnyA wfrnsA
+[NeMo I 2024-06-03 05:02:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:40 wer:330] reference:yEny bdy >s>lk s&Al rwsyA myn qtlt mn AlzEmA' AlErb rwsyA >y dwlp Erbyp AHtlt
+[NeMo I 2024-06-03 05:02:40 wer:331] predicted:yEny bdy >s>lk s&Al rwsyA myn qtlp AlzEmA' AlErb rwsyA >y dwlp Erbyp AHtlt
+[NeMo I 2024-06-03 05:02:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:40 wer:330] reference:<nh DHkwA Elyhm wAnthwA mnhm wnsywA mnhm
+[NeMo I 2024-06-03 05:02:40 wer:331] predicted:>nh DHkwA Ely hn wAnthwA mnhm wm$ y&mnh
+[NeMo I 2024-06-03 05:02:40 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:40 wer:330] reference:lnfsH AlmjAl ll>mn wAlAstqrAr lEmlyp syAsyp by$trk fyhA kl Alswryyn
+[NeMo I 2024-06-03 05:02:40 wer:331] predicted:lA nftH AlmjAl lA Al>mn wAlAstqrAr lA Emlyp syAsyp y$trk fyhA kl Alswryyn
+[NeMo I 2024-06-03 05:02:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:41 wer:330] reference:tHAlf AstrAtyjy >w dfAE m$trk byn rwsyA wswryA lmA*A Swrtm
+[NeMo I 2024-06-03 05:02:41 wer:331] predicted:tHAlf AstrAtyjy >w dfAE m$trk byn rwsyA wswryA lmA*A Swrtm
+[NeMo I 2024-06-03 05:02:41 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:41 wer:330] reference:wlA ElY kl mA yHyT bh Alrws yHAwlwn Al|n byE mjmwEp mn Al>whAm llEAlm
+[NeMo I 2024-06-03 05:02:41 wer:331] predicted:wlA ElY kl mA yHyT bh Alrws yHAwlwn Al|n byE mjmwEp mn Al>whAm llEAlm
+[NeMo I 2024-06-03 05:02:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:42 wer:330] reference:tEny bbsATp $dydp >nh lys mqAwmA wlA mmAnEA hw xA}n lkl mbAd} qAm ElyhA h*A AlnZAm
+[NeMo I 2024-06-03 05:02:42 wer:331] predicted:tEny bbsATp $dydp >nh lys mqAwmA wlA mmAnEA hw xA}n lkl mbAd} qAm ElyhA h*A AlnZAm
+[NeMo I 2024-06-03 05:02:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:42 wer:330] reference:ESA}b AlHq wAlfATmywn wlm ynjH wHzb HAl$ AstdEY bEdhm
+[NeMo I 2024-06-03 05:02:42 wer:331] predicted:> ESA}b AlHq wAlfATmywn wlm ynjH wHzb HAl$ wAstdEY bEdhm
+[NeMo I 2024-06-03 05:02:42 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:42 wer:330] reference:fxlyk bAlklAm AlsyAsy wyETyk AlEAfyp bAlEks you ar doing vry wll Als&Al AlmTrwH syd hyvm xlynA n>x* mwDwE AlEmAlp wAlxyAnp
+[NeMo I 2024-06-03 05:02:42 wer:331] predicted:fxlyk bAlklAm AlsyAsy w>ETyk AlEAfyp bAlEks ATo ArD An Avrl Als&Al AlmTrwH syd hyvm xlynA n>x* mwDwE AlEmAlp wAlxyAnp
+[NeMo I 2024-06-03 05:02:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:43 wer:330] reference:yA dktwr AlmslHyn ElY AlHdwd mE AljwlAn Em ytEAmlwA mE <srA}yl Em yrwHwA ElY Almst$fyAt mE <srA}yl
+[NeMo I 2024-06-03 05:02:43 wer:331] predicted:yA dktwr AlmslHyn ElY AlHdwd mE AljwlAn Em ytEAmlwA mE <srA}yl Em yrwHwA ElY Almst$fyAt mE <srA}yl
+[NeMo I 2024-06-03 05:02:43 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:43 wer:330] reference:mE qbrS >rslwA rsA}l <lY qbrS AlTyrAn Alrwsy mwjwd
+[NeMo I 2024-06-03 05:02:43 wer:331] predicted:mE qbrS >rslwA rsA}l <lY qbrS AlTyrAn Alrwsy mwjwd
+[NeMo I 2024-06-03 05:02:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:44 wer:330] reference:wjbhp AlnSrp wbyjybwA mn jmyE >SqAE Al>rD AlmslHyn
+[NeMo I 2024-06-03 05:02:44 wer:331] predicted:wjbhp AlnSrp wyjybwA mn jmyE >SqAE Al>rD AlmslHyn
+[NeMo I 2024-06-03 05:02:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:44 wer:330] reference:EndmA kAnt >myrkA thdd bqSf swryA qAl bAlHrf AlwAHd qAl fy AlHlqp En AlDrbp Al>myrkyp >yAm AlkymAwy qAl
+[NeMo I 2024-06-03 05:02:44 wer:331] predicted:EndmA kAnt >myrkA thdd bqSf swryA qAl bAlHrf AlwAHd qAl fy AlHlqp En AlDrbp Al>myrkyp >yAm AlkymAwy qAl
+[NeMo I 2024-06-03 05:02:44 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:44 wer:330] reference:llqtAl Dd AlnZAm Tyb mn Hq AlnZAm >n ystEyn bHzb Allh wb<yrAn wbrwsyA wbkwbA wbkwryA Al$mAlyp wbAl>fgAn wbk*A
+[NeMo I 2024-06-03 05:02:44 wer:331] predicted:llqtAl Dd AlnZAm Tyb mn Hq AlnZAm >n ystEyn bHzb Allh wb<yrAn wbrwsyA wbkwbA wbkwryA Al$mAlyp bAl>fgAn wbk*A
+[NeMo I 2024-06-03 05:02:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:45 wer:330] reference:tSryH lrAfsnjAny fy >ktwbr >lfyn wtmAnyp HynmA kAn Al>sd yfAwD <yrAn srA yqwl fyh rAfsnjAny
+[NeMo I 2024-06-03 05:02:45 wer:331] predicted:tSryH lrfsnjAny fy >ktwbr HynmA kAn Al>sd yfAwD <yrAn srA yqwl fyh rfsnjAny
+[NeMo I 2024-06-03 05:02:45 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:45 wer:330] reference:Tyb >nt tqwl >nh lmA*A HlAl Elykm >ntm fy AlmEArDp >n
+[NeMo I 2024-06-03 05:02:45 wer:331] predicted:Tyb >nt tqwl >nh lmA*A HlAl Elykm >ntm fy AlmEArDp >n
+[NeMo I 2024-06-03 05:02:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:46 wer:330] reference:fy fDA}yAt AlmqAwlp wAlmmAtEp kmA yqwl h*A h*A Al$xS xlSt AlxTAb xlynA nHky Tyb tfDl kyf trd ok
+[NeMo I 2024-06-03 05:02:46 wer:331] predicted:fDA}yAt AlmqAwmp wAlmAEp kmA yqwl h*A h*A xTA tfDl kyf trd
+[NeMo I 2024-06-03 05:02:46 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:46 wer:330] reference:>y dwlp tstTyE AlAtfAq wmsAE Tlb AlmsAEdp mn HlyfhA Tyb yEny
+[NeMo I 2024-06-03 05:02:46 wer:331] predicted:>y dwlp tstTyE AlAtfAq wTlb AlmsAEdp mn HlyfhA yb yEny
+[NeMo I 2024-06-03 05:02:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:47 wer:330] reference:yEny Em btxwfnA bbwtyn yEny SAr fy SAbnA fykm mvl AlEnyn
+[NeMo I 2024-06-03 05:02:47 wer:331] predicted:Ey Ebd txwfnA bbwtyn yEny SAbnA fy km mvl AlElmyyn A
+[NeMo I 2024-06-03 05:02:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:47 wer:330] reference:Alywm ntHdv bAlwqA}E mA fElh zwj >smA' EndmA gAdr <lY rwsyA w>x* AltElymAt mn bwtyn b>n swryA
+[NeMo I 2024-06-03 05:02:47 wer:331] predicted:Alywm ntHdv bAlwqA}E mA fElh zwj >smY EndmA gAdr <lY rwsyA w>x*t tElymAt mn bwtyn b>n swryA
+[NeMo I 2024-06-03 05:02:47 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:47 wer:330] reference:lys lA fy swryA wlA fy gyr swryA Al$Eb Alswry sylAHq h*A Almjrm bkl mA >wty mn qwp mn Ast Alywm EndmA tSbH EA$wrA'
+[NeMo I 2024-06-03 05:02:47 wer:331] predicted:lys lA fy swryA wlA fy gyr swryA Al$Eb Alswry sylAHq h*A Almjrm bkl mA >wty mn qwp mn Alywm EndmA tSbH EA$wrA'
+[NeMo I 2024-06-03 05:02:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:48 wer:330] reference:mA smEt s&Alh tfDl <lk Altdxl tfDl rd bHkAyp $yEy mA $yEy lm AsmEh jydA lA s>lth En >wbAmA >nA
+[NeMo I 2024-06-03 05:02:48 wer:331] predicted:Als&Al wArd fqT lk l <y Altdxl fqT d bHkAyp $yEy mA $yE ml mA zy smE y A
+[NeMo I 2024-06-03 05:02:48 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:48 wer:330] reference:>nA knt >twqE fy Alywm Al*y n$rt fyh Swr b$Ar AlkymAwy mE bwtyn fy Alkrmlyn
+[NeMo I 2024-06-03 05:02:48 wer:331] predicted:>nA knt >twqE fy Alywm Al*y n$rt fyh Swr b$Ar AlkymAwy mE bwt fy Alkrmlyn
+[NeMo I 2024-06-03 05:02:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:49 wer:330] reference:whw yt*ll wytwsl <lY Alrws mn $An Allh AEmlwA EnA qwAEd Eskryp
+[NeMo I 2024-06-03 05:02:49 wer:331] predicted:whw yt*ll wytwsl <lY Alrws mn $An Allh yEmlwA EndnA qwAEd Eskryp
+[NeMo I 2024-06-03 05:02:49 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:49 wer:330] reference:>nt lmA Em trwH Em tdfE flws wEm tEml AstvmArAt bdwlp wh*h Alflws Em tdxl llbnwk wEm tjy' q*A}f l<srA}yl
+[NeMo I 2024-06-03 05:02:49 wer:331] predicted:>nt lmA trwH Em tdfE flws wEm tEml AstvmArAt Aldwlp wh*h Alflws Em tdxl Albnwk wEm tjy q*A}f l<srA}yl
+[NeMo I 2024-06-03 05:02:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:50 wer:330] reference:bAl<ElAm Aljnsy Altrbwy TlE lnA hA AlqSp bAltsEynAt Al<ElAm Aljnsy Altrbwy tSwr yEny
+[NeMo I 2024-06-03 05:02:50 wer:331] predicted:bAl<ElAm Aljnsy Altrbwy TlE >nA lsh bAltsEynAt Al<ElAm Aljnsy Altrbwy tSwr yEny
+[NeMo I 2024-06-03 05:02:50 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:50 wer:330] reference:yEny wSl bhm kmA yqwl lk AlbED <lY <lY <lY mrHlp >nh yA jmAEp Eyb lk Eyb Eyb b|xr AlnhAr bwtyn
+[NeMo I 2024-06-03 05:02:50 wer:331] predicted:yEny wSl bhm kmA yqwl lk AlbED <lY mrHlp >nh yA jmAEp Eyb lk Eyb Eyb b|xr AnhAr bwtyn
+[NeMo I 2024-06-03 05:02:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:51 wer:330] reference:>nA mwDwEy >nh hl mA zAl b<mkAn h*A AlnZAm yEyr Al|xryn bAlEmAlp nEm qd ystTyE bwtyn <nqA*
+[NeMo I 2024-06-03 05:02:51 wer:331] predicted:>n mwDwEy mwDwE mwDwE zAl b<mkAn h*A AlnZAm yEyr Al|xr AlEml qd ystTyE bwtyn <nqA* b
+[NeMo I 2024-06-03 05:02:51 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:51 wer:330] reference:Alt$yE fy kl mkAn HtY dm$q Al>mwyp fqdt k*A lm ytrk lm ytrk jhp <lA wbAE swryA
+[NeMo I 2024-06-03 05:02:51 wer:331] predicted:Alt$yE fy kl mkAn HtY dm$q Al>mwyp fqdt k*A lm ytrk lm ytrk jhp <lA wbAE swryA
+[NeMo I 2024-06-03 05:02:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:52 wer:330] reference:lm ybq lnA <lA >n n$kr DyfynA Ebr Al>qmAr AlSnAEyp mn lndn Alsyd hyvm sbAhy whnA fy Al>stwdyw Alsyd mHyy Aldyn AllA*qAny nltqy msA' AlvlAvA' Almqbl
+[NeMo I 2024-06-03 05:02:52 wer:331] predicted:lm ybq lnA <lY n$kr DyfynA Ebr Al>qmAr AlSnAEyp mn lndn Alsyd hyvm sbAhy whnA fy Al>stwdyw Alsyd mHy Aldyn Al>fgAny nltqy msA' AlvlAvA' Almqbl
+[NeMo I 2024-06-03 05:02:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:52 wer:330] reference:lA >*kr mn* mtY dArt rHY AlHrb >*kr Hrby mE nfsy
+[NeMo I 2024-06-03 05:02:52 wer:331] predicted:lA >*kr mn* mtY dArt rH Hrfy >*kr Hrby mE nfsy
+[NeMo I 2024-06-03 05:02:52 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:52 wer:330] reference:mA*A fElt bh Alnfs Alb$ryp wkwAbyshA
+[NeMo I 2024-06-03 05:02:52 wer:331] predicted:mA*A fElt bh Alnfs Alb$ryp wkwAbyvhA
+[NeMo I 2024-06-03 05:02:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:53 wer:330] reference:|h AlmHll Ally >nA tElmt mE wAHd Asmh mArk $lwm bryjyh |h bs kAn rjl Endh mA ysmY b tat
+[NeMo I 2024-06-03 05:02:53 wer:331] predicted:AlmHl Ally >nA tHlt mE wHd vmAr $lwm bry bs Alrjl Endh mA ysmY bAl
+[NeMo I 2024-06-03 05:02:53 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:53 wer:330] reference:ffy nTAq AjtmAEAt AljmEyp Alfrnsyp kAn fy kAn r}yshA wAHd Asmh n$t
+[NeMo I 2024-06-03 05:02:53 wer:331] predicted:ffy nTAq jmAEAt AljmEyp Alfrnsyp kAn fy Alr}ys wAHd Asmh nA$T
+[NeMo I 2024-06-03 05:02:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:54 wer:330] reference:wAntht fbdl mA ywqE tHt nZAm Alkbt Ally hw kbthA
+[NeMo I 2024-06-03 05:02:54 wer:331] predicted:wAntht fbdl mA ywqE tHt nZAm Alkbt Ally hw kbthA
+[NeMo I 2024-06-03 05:02:54 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:54 wer:330] reference:tEbyr AltEbyr AlmtwAry bAltwryAt yEny bkl fnwn
+[NeMo I 2024-06-03 05:02:54 wer:331] predicted:AltEbyr AlmtwAry bAlvwrAt yEny bkl fnwn
+[NeMo I 2024-06-03 05:02:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:55 wer:330] reference:Altwry AltwryAt Ally >$rnA <lyhA dlwqty whw dA AltHlyl
+[NeMo I 2024-06-03 05:02:55 wer:331] predicted:lA AltwryAt Alty >$rnA <lyhA dwl hw dwr ltHlyl
+[NeMo I 2024-06-03 05:02:55 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:55 wer:330] reference:ktAb AltHlyl Alnfsy Elm wElAj wqDyp
+[NeMo I 2024-06-03 05:02:55 wer:331] predicted:ktAb AltHlyl Alnfsy Elm wElAj wqbyp
+[NeMo I 2024-06-03 05:02:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:56 wer:330] reference:wmslmAt ysmwhA AlmslmAt Ally mn gyrhA m$ HtErf tbtdy lgAyp mA h*A AltEAml yxlq m$klAt
+[NeMo I 2024-06-03 05:02:56 wer:331] predicted:wmslmA ysmwhA AlmslmAt Ally mn gyrhA m$ tErf tbtd} lgAyp m h*A AltEAml yxlq m$klAt
+[NeMo I 2024-06-03 05:02:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:56 wer:330] reference:hw fy AlwAqE kAn Akt$Af llEmlyAt Ally btbtdy AlHlm mbny ElyhA
+[NeMo I 2024-06-03 05:02:56 wer:331] predicted:hw fy AlwAqE kAn Akt$Af llEmlyAt Alty t AlHlm mbnY ElyhA
+[NeMo I 2024-06-03 05:02:56 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:56 wer:330] reference:tEryfh ElY >nh AlElm Akt$f >wdyb wdA bqY klAm fArg
+[NeMo I 2024-06-03 05:02:56 wer:331] predicted:tEryfh ElY >nh AlElm Akt$f >dyb wd bh klAm fArg
+[NeMo I 2024-06-03 05:02:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:57 wer:330] reference:ffy Al>nvrwbwlwjy mvlA kAn fy ktb
+[NeMo I 2024-06-03 05:02:57 wer:331] predicted:fy Al>nvrwbwlwjy mvlA kAn fy bd'
+[NeMo I 2024-06-03 05:02:57 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:57 wer:330] reference:Al Elm Allgp Ally xlAny >bS lk bAEtbArk $xS mtklm hnA bqY fy frq
+[NeMo I 2024-06-03 05:02:57 wer:331] predicted:Elm Allgp Ally xlynA bs lh bAEtbArk $xS mtklm >nA mA fy frq
+[NeMo I 2024-06-03 05:02:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:58 wer:330] reference:mn Hyv >n AlklAm bAstmrAr yHtml >kvr mn mEnY
+[NeMo I 2024-06-03 05:02:58 wer:331] predicted:mn Hyv >nh AlklAm bAstmrAr yHtml >kvr mn mEnY m
+[NeMo I 2024-06-03 05:02:58 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:58 wer:330] reference:Ally hw AlmfrwD >nk yEny btErf AlwAqE >nt Emrk mA HTyt rjlk fyh
+[NeMo I 2024-06-03 05:02:58 wer:331] predicted:Ally hw AlmfrwD >nk yEny tErf AlwAqE >nt Emrk mA HTt ryb lk fyh
+[NeMo I 2024-06-03 05:02:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:59 wer:330] reference:lA AlHqyqp mA ttk$f$ k ral AlHqyqp dy mEAny
+[NeMo I 2024-06-03 05:02:59 wer:331] predicted:lA hw AlHqyqp mA Alt$fy kthry AlHqyqp dy m EAny
+[NeMo I 2024-06-03 05:02:59 wer:329] 
+    
+[NeMo I 2024-06-03 05:02:59 wer:330] reference:w>nhA idntity tkwn idntity Ally tEjb Al|xr wtmtlk bhA Al|xr
+[NeMo I 2024-06-03 05:02:59 wer:331] predicted:w>nhA >yd >nt tkwn >y >nt Alty tEj Al|xr wtmtlk bhA Al|xr
+[NeMo I 2024-06-03 05:03:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:00 wer:330] reference:bs Allgp Alm$trkp dyt
+[NeMo I 2024-06-03 05:03:00 wer:331] predicted:> bs Allgp Alm$trkp dy
+[NeMo I 2024-06-03 05:03:00 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:00 wer:330] reference:Al*y lA ystgnY Enh ybqY Almmtlk AlmAlk llmmtlk |h |h |h
+[NeMo I 2024-06-03 05:03:00 wer:331] predicted:Al*y lA ystgnY Enh ybqY Almmtlk AlmAlk fy Al mmtlk
+[NeMo I 2024-06-03 05:03:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:01 wer:330] reference:wlkn bqY HtlAqyh fyn bqY tlAqyh bqY f hnA byjy dwr AlfAntAzm dwr AlfAntAzm hw Aldwr
+[NeMo I 2024-06-03 05:03:01 wer:331] predicted:wlkn mA >Hd l>y fyn bqY l>y mA >f hnA yjy dwr Alfnz dwr AlftA mA hw Aldwr
+[NeMo I 2024-06-03 05:03:01 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:01 wer:330] reference:xASp bAltHlyl Alnfsy wbAlmHll Alnfsy wbEd wbED AlqDAyA AlmrtbTp bh*A AlmjAl
+[NeMo I 2024-06-03 05:03:01 wer:331] predicted:xASp bAltHlyl Alnfsy wAlmHll Alnfsy w bED AlqDAyA AlmrtbTp bh*A AlmkAn
+[NeMo I 2024-06-03 05:03:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:02 wer:330] reference:wl*lk AltHlyl Alnfsy <*A AEtbrth fy Hqyqth
+[NeMo I 2024-06-03 05:03:02 wer:331] predicted:wl*lk AltHlyl Alnfsy *y AEtbrth fy Hqyqth
+[NeMo I 2024-06-03 05:03:02 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:02 wer:330] reference:>n hw AlEAlm blA Elm w>n AllAElm Ally fyh dA >w AllA mElwm Endh
+[NeMo I 2024-06-03 05:03:02 wer:331] predicted:>nh hw AlEAlm blA Elm w>nh AllA Elm Ally fyh dh w Allh mElwm Endh
+[NeMo I 2024-06-03 05:03:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:03 wer:330] reference:h*A AlrbT byn Al*kwrp wbyn Alqdrp AljdEnp AlxDwE Almr>p
+[NeMo I 2024-06-03 05:03:03 wer:331] predicted:h*A AlrbT byn Al*kwrp wbyn Alqdrp rknt EAnY AlxDwE Almrp
+[NeMo I 2024-06-03 05:03:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:03 wer:330] reference:tsAEdhm ElY AlHyAp fy Al>yAm AlqAdmp tbEd Enhm Alqlq Altwtr mA*A tqwl lhm yEny
+[NeMo I 2024-06-03 05:03:03 wer:331] predicted:sAEdhm ElY AlHyAp fy Al>yAm AlqAdmp tbEd Enhm Al|lp Altwtr mA*A tqwl lhm yEny
+[NeMo I 2024-06-03 05:03:03 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:03 wer:330] reference:hl hAltk Zlmp Alnfs Al>mArp bZlm *wy AlqrbY fEzft En AlEwdp <lY Albld
+[NeMo I 2024-06-03 05:03:03 wer:331] predicted:hl hAltk Zlmp Alnfs Al>mAr bZlm *wy AlqrbY fEzft En AlEwdp <lY Albld
+[NeMo I 2024-06-03 05:03:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:04 wer:330] reference:tEks brAEp SAnEyhA rgm tTwr Al|lAt
+[NeMo I 2024-06-03 05:03:04 wer:331] predicted:tEks brAEp SAnEyhA rgm tTwr Al|lAt
+[NeMo I 2024-06-03 05:03:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:04 wer:330] reference:Alty tTlY bTlA' xAS wtzyn brswm *hbyp
+[NeMo I 2024-06-03 05:03:04 wer:331] predicted:Alty tTlE bTlAE xAS wtzyn brswm *hbyp
+[NeMo I 2024-06-03 05:03:04 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:04 wer:330] reference:wAlmzynp bzxArf mn >wrAq Al*hb wtErf bAlyAbAnyp bAsm $yky
+[NeMo I 2024-06-03 05:03:04 wer:331] predicted:wAlmzynp bzxArfp mn >wrAq Al*hb wtErf bAlyAbAnyp bAsm $yk
+[NeMo I 2024-06-03 05:03:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:05 wer:330] reference:nZrA lvmnhA AlmrtfE mqArnp mE Al>wAny AlmSnwEp mn AlmwAd Al>xrY
+[NeMo I 2024-06-03 05:03:05 wer:331] predicted:nZrA lvmnhA AlmrtfE mqArnp mE Al>wAny AlmSnwEp mn AlmwAd Al>xrY
+[NeMo I 2024-06-03 05:03:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:05 wer:330] reference:lh*h Al>wAny wzn xfyf yvyr Aldh$p wlmEAn SAf TbyEy w>lwAn hAd}p wmlms dAf}
+[NeMo I 2024-06-03 05:03:05 wer:331] predicted:lh*h Al>wAny wzn xfyf yvyr Aldh$p wlA mEAn SAf TbyEy w>lwAn hAd}p wmlms dAf}
+[NeMo I 2024-06-03 05:03:05 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:05 wer:330] reference:EA}lp jwnyA swmA ttwArv mhnp Tly Al>wAny bAllk mn* Edp >jyAl
+[NeMo I 2024-06-03 05:03:05 wer:331] predicted:EA}lp jnyA swmA ttwArv mhnp tTly Al>wAny bAllk mn* Edp >jyAl
+[NeMo I 2024-06-03 05:03:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:06 wer:330] reference:nstxdm fy wr$tnA AlTlA' AlTbyEy fqT wkl EmlnA ytm b$kl ydwy
+[NeMo I 2024-06-03 05:03:06 wer:331] predicted:nstxdm fy wr$p AlATlAE AlTbyEy fqT wkl EmlnA ytm b$kl ydwy
+[NeMo I 2024-06-03 05:03:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:06 wer:330] reference:tAdA$y wrv mhnp Alnq$ >yDA En >byh
+[NeMo I 2024-06-03 05:03:06 wer:331] predicted:t$y wrv mhnp Alnq$ >yDA En >byh
+[NeMo I 2024-06-03 05:03:06 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:06 wer:330] reference:lqd tgyrt AlEAdAt Alg*A}yp wvqAfp AlTEAm fy AlyAbAn
+[NeMo I 2024-06-03 05:03:06 wer:331] predicted:lqd tgyrt AlEAdAt Alg*A}yp wvqAfp AlTEn fy AlyAbAn
+[NeMo I 2024-06-03 05:03:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:07 wer:330] reference:kh*h AlmlAEq Alty tSnE mn Alx$b wtTlY bAllk AlTbyEy
+[NeMo I 2024-06-03 05:03:07 wer:331] predicted:kh*h AlmlAEq Alty tSnE mn Alx$b wtTlb bAllk AlTbyEy
+[NeMo I 2024-06-03 05:03:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:07 wer:330] reference:wyTmH E$AqhA fy >n tSbH jz'A mn mnAfsAt >wlmbyAd EAm >lfyn w>rbEp wE$ryn
+[NeMo I 2024-06-03 05:03:07 wer:331] predicted:wyTmH E$AqhA fy >n tSbH jz'A mn mnAfsAt >wlmbyAd EAm
+[NeMo I 2024-06-03 05:03:07 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:07 wer:330] reference:ynZr <lY AlsylAt mn jwAnb mtEddp
+[NeMo I 2024-06-03 05:03:07 wer:331] predicted:ynZr <lY AlsylAt mn jwAnb mtEddp
+[NeMo I 2024-06-03 05:03:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:08 wer:330] reference:wlA ySH >n nstErD bhA qwtnA >mAm Al|xryn wmn >xlAqyAtnA >n yxfy Al$Ab mErfth bAlsylAt En AlgrbA'
+[NeMo I 2024-06-03 05:03:08 wer:331] predicted:wlA ySH >n nstErD bhA qwtnA >mAm Al|xryn wmn >xlAqyAtnA >n yxfy Al$Ab mErfth bAlslAk En AlgrbA'
+[NeMo I 2024-06-03 05:03:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:08 wer:330] reference:kwAHd mn >bTAl vwrp AlAstqlAl Hyv qAm fy $bAbh btjmyE >SdqA}h wtdrybhm ElY AlsylAt
+[NeMo I 2024-06-03 05:03:08 wer:331] predicted:kwAHd mn >bTAl vwrp AlAstqlAl Hyv qAm fy $bAbh btjmyE >SdqA}h wtdrybhm ElY AlsylAt
+[NeMo I 2024-06-03 05:03:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:08 wer:330] reference:bEd ftrp mn trAjE AhtmAm AlftyAn wAlftyAt bh wAn$gAlhm bhwAyp >xrY
+[NeMo I 2024-06-03 05:03:08 wer:331] predicted:bEd ftrp mn trAjE AhtmAm AlftyAn wAlftyAt bh wAn$gAlhm bhwAyAt >xrY
+[NeMo I 2024-06-03 05:03:08 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:08 wer:330] reference:wHtY ytm <dxAl AlsylAt Dmn Al>lEAb Al>wlmbyp lEAm >lfyn w>rbEp wE$ryn
+[NeMo I 2024-06-03 05:03:08 wer:331] predicted:wHtY ytm <dxAl AlsylAt Dmn Al>lEAb Al>wlmbyp lEAm
+[NeMo I 2024-06-03 05:03:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:09 wer:330] reference:wmE >n AstxdAmAthA qd trAjEt wln tEd kmA kAnt fy AlmADy HADrp bqwp fy HyAp AlnAs f<nhA tZl mwrwvA vqAfyA
+[NeMo I 2024-06-03 05:03:09 wer:331] predicted:mE AstxdAmAthA qd trAjEt wlm tEd kmA kAnt fy AlmADy HADrp bqwp fy HyAp AlnAs f<nhA tZl mwrwvA vqAfyA
+[NeMo I 2024-06-03 05:03:09 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:09 wer:330] reference:ElY mtn sfn x$byp bhdf mHAkAp Emlyp AlgwS
+[NeMo I 2024-06-03 05:03:09 wer:331] predicted:ElY mtn sfn x$byp bhdf mHAkAp Emlyp Algwz
+[NeMo I 2024-06-03 05:03:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:10 wer:330] reference:ElY <qAmthA snwyA l<HyA' trAv Al|bA' wAl>jdAd wtEryf Aljyl Aljdyd bh
+[NeMo I 2024-06-03 05:03:10 wer:331] predicted:ElY <qAmthA snwyA l<HyA' trAv Al|bA' wAl>jdAd wtEryf Aljyl Aljdyd bh
+[NeMo I 2024-06-03 05:03:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:10 wer:330] reference:mslmyn AlbHr fl*At >kbAdhm Elh yhbhm xyrAth
+[NeMo I 2024-06-03 05:03:10 wer:331] predicted:mslmyn AlbHr fy *At >kbAdhm Elh yhbhm xyrAth
+[NeMo I 2024-06-03 05:03:10 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:10 wer:330] reference:f>nA mn >SEd AlmHml w>msk AlkAnp w>xTf fy Al$rAk fy AlbHr >nA >kwn qA}d Alsfynp
+[NeMo I 2024-06-03 05:03:10 wer:331] predicted:f>nA mn >sEd AlmHml lmsk kAn wxTf bAl<$rAf bAlbHr >nA kAn qA}d Alsfynp
+[NeMo I 2024-06-03 05:03:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:11 wer:330] reference:Aljw ylEb EAml nfsy yEny mw bs >nA HtY Al$bAb yEny nkwn qAEdyn fy mkyf wnkwn qAEdyn fy brAd wmEnA tlfwnAt wmEnA >hAlynA wnrwH wnjy'
+[NeMo I 2024-06-03 05:03:11 wer:331] predicted:Aljwy AlEb Eml nfsy yEny mw bs >nA yEny HtY Al$bAb <HnA kwn qAEdyn mkyf wqAEdyn brAd wmEnA >lf w>nA tmEnA hynA wrwny
+[NeMo I 2024-06-03 05:03:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:11 wer:330] reference:Almjdmy EAdp ykwn m$rf ElY Alsfynp b$kl EAm mn AltjhyzAt tjhyz ll$rAE tjhyzAt Hq Al$bAb
+[NeMo I 2024-06-03 05:03:11 wer:331] predicted:ldy EAmp ykwn m$rf ElY Alsfyrp b$kl EAm tjhyzAt tjAh xrb tjAh SrAE mvlA Hq Al$wAb
+[NeMo I 2024-06-03 05:03:11 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:11 wer:330] reference:fy mwAjhp HrArp AlTqs wZrwf Al<bHAr AlqAsyp yHrS Alnwx*p ElY <bqA' mEnwyAt fryqh mrtfEp
+[NeMo I 2024-06-03 05:03:11 wer:331] predicted:fy mwAjhp HrArp AlTqs wZrwf Al<bHAr AlqAsyp yHrS Alnx* ElY <bqA' mEnwyAt fryqh mrtfEp
+[NeMo I 2024-06-03 05:03:12 wer:329] 
+    
+[NeMo I 2024-06-03 05:03:12 wer:330] reference:qbl >n ttrAjE mE Akt$Af All&l& AlSnAEy >w txtfy tqrybA mE Akt$Af AlnfT
+[NeMo I 2024-06-03 05:03:12 wer:331] predicted:qbl >n ttrAjE mE Akt$Af All&l& AlSnAEy >w txtfy tqrybA mE Akt$Af AlnfT
+[NeMo W 2024-06-03 05:03:12 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('global_step', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-06-03 05:03:12 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_loss', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    
+[NeMo W 2024-06-03 05:03:12 nemo_logging:349] /home/hlwn038u1/data/for_elrawy/conda_envs/nemo/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:433: PossibleUserWarning: It is recommended to use `self.log('test_wer', ..., sync_dist=True)` when logging on epoch level in distributed setting to accumulate the metric across devices.
+      warning_cache.warn(
+    

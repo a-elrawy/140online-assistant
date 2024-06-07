@@ -1,0 +1,13 @@
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+`Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 1 processes
+----------------------------------------------------------------------------------------------------
+
+Restoring states from the checkpoint path at /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39/checkpoints/Conformer-CTC-Char--val_wer=0.2807-epoch=55-last.ckpt
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Loaded model weights from the checkpoint at /lfs01/workdirs/hlwn038u1/NeMo/nemo_experiments/Conformer-CTC-Char/2024-03-23_16-27-39/checkpoints/Conformer-CTC-Char--val_wer=0.2807-epoch=55-last.ckpt

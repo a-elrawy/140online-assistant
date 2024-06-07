@@ -1,0 +1,7 @@
+__pycache__
+decoders
+text
+checkpoints
+*.arpa
+*.npy
+index/faiss_index.bin
